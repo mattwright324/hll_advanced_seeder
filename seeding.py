@@ -27,10 +27,10 @@ try:
         server_ip = game_connect.split(':')[0]
         server_connect_port = int(game_connect.split(':')[1])
 
-        potential_query_ports = [
-            server_connect_port + 17890,
-            server_connect_port + 19238
-        ]
+        query_port_offset = [15, 17890, 19238, 19301, 20127]
+        potential_query_ports = []
+        for offset in query_port_offset:
+            potential_query_ports.append(server_connect_port + offset)
 
         valid_server = False
         for query_port in potential_query_ports:
@@ -39,13 +39,13 @@ try:
                 desc = try_server["description"]
                 
                 if seeding_yaml["verify_name"] and try_server["verify_name"] not in info.server_name:
-                    print(desc, 'is no longer valid. looking for "', try_server["verify_name"], '" but server name was "', info.server_name, '"')
+                    print('INVALID [', desc, '] l. Server name did not contain keyword [', try_server["verify_name"], '] was [', info.server_name, ']')
                     break
                 if info.password_protected:
-                    print(desc, 'is password protected, ignoring')
+                    print('INVALID [', desc, '] was password protected')
                     break
                 
-                print(desc, "is valid! status=", info.player_count, '/', info.max_players)
+                print('VALID [', desc, '] status=', info.player_count, '/', info.max_players)
                 
                 valid_server = True
                 
@@ -66,9 +66,9 @@ try:
     print()
     print()
 
-    print("Launching game and waiting 30 seconds...")
+    print("Launching game and waiting 60 seconds...")
     subprocess.run("cmd /c start steam://run/686810")
-    time.sleep(30)
+    time.sleep(60)
     print()
     print()
 
