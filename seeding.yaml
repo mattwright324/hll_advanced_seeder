@@ -1,0 +1,44 @@
+# On server query, the minimum player count to switch to the next server in the list
+# Technically 40 is seeded but better to stick around until its at least 50-60
+seeded_player_limit: 50
+# On server query, verify the server name contains a specified word
+# Sometimes servers change hosts, the IP is reused, and becomes a new/different server
+verify_name: true
+# How often to query the server player count
+server_query_rate: 15 
+
+# List of servers to connect to and seed
+# Servers are queried with A2S / Valve Protocol
+# Use the Steam > View > Game Servers browser and copy the ip:port for the desired server(s)
+seeding_list: [
+  {
+    description: Saucymuffin,
+    connect: 192.169.95.146:9075,
+    verify_name: BEER
+  },
+  {
+    description: Glows East,
+    connect: 92.118.18.58:7792,
+    verify_name: Glow
+  },
+  {
+    description: Glows West,
+    connect: 104.238.222.122:7792,
+    verify_name: Glow
+  },
+  {
+    description: Outpost,
+    connect: 181.214.149.21:8772,
+    verify_name: BHB
+  },
+  {
+    description: SoulSniper,
+    connect: 192.169.95.2:8530,
+    verify_name: SOULSNIPER
+  },
+  {
+    description: Brew East,
+    connect: 192.169.86.218:9075,
+    verify_name: BrewDawg
+  }
+]
