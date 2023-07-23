@@ -4,7 +4,7 @@ seeded_player_limit: 50
 # On server query, verify the server name contains a specified word
 # Sometimes servers change hosts, the IP is reused, and becomes a new/different server
 verify_name: true
-# How often to query the server player count
+# How often to query the server player count in seconds
 server_query_rate: 15 
 
 # List of servers to connect to and seed

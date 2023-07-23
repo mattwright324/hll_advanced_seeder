@@ -8,6 +8,7 @@ Extended with Python for more advanced seeding automation, based on initial batc
 
 1. Install the latest Python 3.x
 	- https://www.python.org/downloads/
+	- Check the box to add Python to PATH
 2. Open command prompt and install required packages
 	- `pip install python-a2s pyyaml`
 3. Open `config.txt` and set the time in minutes for when to close the game
