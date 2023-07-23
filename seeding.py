@@ -101,7 +101,9 @@ try:
                 tried_connect = False
                 continue
             
-            print(info.player_count, '/', info.max_players)
+            current_time = time.strftime("%H:%M:%S", time.localtime())
+
+            print(current_time, ' ', info.player_count, '/', info.max_players)
             
             if not tried_connect:
                 connect = "steam://connect/" + str(server.server_ip) + ":" + str(server.query_port)
