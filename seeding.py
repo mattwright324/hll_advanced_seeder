@@ -86,7 +86,8 @@ try:
             info = a2s.info((server.server_ip, server.query_port), timeout=1)
             
             if info.player_count > seeding_yaml["seeded_player_limit"]:
-                print(server.desc, 'is already seeded', info.player_count, '/', info.max_players, 'Moving on.')
+                print(server.desc, 'is seeded', info.player_count, '/', info.max_players)
+                print('Moving on.')
                 seed_index += 1
                 print()
                 print('Monitoring [', valid_servers[seed_index].desc, ']')
