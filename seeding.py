@@ -27,7 +27,14 @@ try:
         server_ip = game_connect.split(':')[0]
         server_connect_port = int(game_connect.split(':')[1])
 
-        query_port_offset = [15, 17890, 19238, 19301, 20127]
+        query_port_offset = [
+            15,     # G-Portal
+            17890,  # GTX
+            19238,  # Low.MS
+            17670,  # ???       offset from fll.fi / WTH
+            18238,  # ???       offset from HLL Brasil
+            20127   # ???       offset from chinese servers
+        ]
         potential_query_ports = []
         for offset in query_port_offset:
             potential_query_ports.append(server_connect_port + offset)
@@ -45,7 +52,7 @@ try:
                     print('INVALID [', desc, '] was password protected')
                     break
                 
-                print('VALID [', desc, '] status=', info.player_count, '/', info.max_players)
+                print('VALID [', desc, '] query_port=', query_port,', status=', info.player_count, '/', info.max_players)
                 
                 valid_server = True
                 
