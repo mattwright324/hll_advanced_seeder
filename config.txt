@@ -1,1 +1,1 @@
-closeGameAfterMinutes="120"
+closeGameAfterMinutes="720"

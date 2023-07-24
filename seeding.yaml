@@ -5,7 +5,9 @@ seeded_player_limit: 50
 # Sometimes servers change hosts, the IP is reused, and becomes a new/different server
 verify_name: true
 # How often to query the server player count in seconds
-server_query_rate: 15 
+server_query_rate: 15
+# How many seconds on server query before a timeout
+server_query_timeout: 10
 
 # List of servers to connect to and seed
 # Servers are queried with A2S / Valve Protocol
