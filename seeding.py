@@ -8,6 +8,42 @@ class Server:
         self.query_port = 0
         self.valid = False
 
+class colors:
+    reset = '\033[0m'
+    bold = '\033[01m'
+    disable = '\033[02m'
+    underline = '\033[04m'
+    reverse = '\033[07m'
+    strikethrough = '\033[09m'
+    invisible = '\033[08m'
+ 
+    class fg:
+        black = '\033[30m'
+        red = '\033[31m'
+        green = '\033[32m'
+        orange = '\033[33m'
+        blue = '\033[34m'
+        purple = '\033[35m'
+        cyan = '\033[36m'
+        lightgrey = '\033[37m'
+        darkgrey = '\033[90m'
+        lightred = '\033[91m'
+        lightgreen = '\033[92m'
+        yellow = '\033[93m'
+        lightblue = '\033[94m'
+        pink = '\033[95m'
+        lightcyan = '\033[96m'
+
+    class bg:
+        black = '\033[40m'
+        red = '\033[41m'
+        green = '\033[42m'
+        orange = '\033[43m'
+        blue = '\033[44m'
+        purple = '\033[45m'
+        cyan = '\033[46m'
+        lightgrey = '\033[47m'
+
 def seed_progress(current, total, seed_start):
     bar_length = 25
     fraction = current / total
@@ -16,11 +52,11 @@ def seed_progress(current, total, seed_start):
     padding = int(bar_length - len(arrow)) * ' '
     
     elapsed = (time.time() - seed_start)
-    elapsed_str = time.strftime("%Hh%Mm%Ss", time.gmtime(elapsed))
+    elapsed_str = time.strftime("%Hh %Mm %Ss", time.gmtime(elapsed))
 
     ending = '\n' if current >= total else '\r'
 
-    print(f'Seed progress: [{arrow}{padding}]  Status: {current}/{total}  {int(fraction*100)}%  Elapsed: {elapsed_str}', end=ending)
+    print(f'Seed progress: [{colors.fg.green}{arrow}{colors.reset}{padding}]  Status: {colors.fg.green}{current}{colors.reset}/{colors.fg.green}{total}  {int(fraction*100)}{colors.reset}%  Elapsed: {colors.fg.green}{elapsed_str}{colors.reset}', end=ending)
 
 try:
     print('Loading seeding.yaml')
@@ -63,19 +99,23 @@ try:
                 desc = try_server["description"]
 
                 if seeding_yaml["verify_name"] and hasattr(try_server, "verify_name") and try_server["verify_name"] not in info.server_name:
-                    print(f'INVALID [ {desc} l. Server name did not contain keyword [ {try_server["verify_name"]} ] was [ {info.server_name} ]')
+                    print(f'{colors.fg.red}INVALID [ {desc} l. Server name did not contain keyword [ {try_server["verify_name"]} ] was [ {info.server_name} ]{colors.reset}')
+                    print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
                     break
                 if info.password_protected:
-                    print(f'INVALID [ {desc} ] was password protected')
+                    print(f'{colors.fg.red}INVALID [ {desc} ] was password protected{colors.reset}')
+                    print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
                     break
                 
                 valid_server = True
 
                 if info.player_count >= seeding_yaml["seeded_player_limit"]:
-                    print(f'SEEDED (Ignoring) [ {desc} ] query_port={query_port}, status={info.player_count}/{info.max_players}')
+                    print(f'{colors.fg.lightgrey}SEEDED (Ignoring) [ {desc} ] query_port={query_port}, status={info.player_count}/{info.max_players}{colors.reset}')
+                    print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
                     break
                 else:
-                    print(f'SEEDING (Added to queue) [ {desc} ] query_port={query_port}, status={info.player_count}/{info.max_players}')
+                    print(f'{colors.fg.green}SEEDING (Queued) [ {desc} ] query_port={query_port}, status={info.player_count}/{info.max_players}{colors.reset}')
+                    print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
                 
                     server = Server()
                     server.desc = try_server["description"]
@@ -91,7 +131,7 @@ try:
                 continue
         
         if not valid_server:
-            print(f'INVALID [ {try_server["description"]} ]')
+            print(f'{colors.fg.red}INVALID [ {try_server["description"]} ]{colors.reset}')
     print()
     print()
 
@@ -108,13 +148,16 @@ try:
         exception_retry = 0
 
         print("Starting seeding server rotation")
-        while True:    
+        while True:
+            if seed_index >= len(valid_servers):
+                break
+            
             server = valid_servers[seed_index]
             
             if not monitor_start:
                 print()
                 print()
-                print('Monitoring [', server.desc, ']')
+                print(f'{colors.fg.yellow}Monitoring [ {server.desc} ]{colors.reset}')
                 tried_connect = False
                 monitor_start = True
                 seed_start = time.time()
@@ -123,6 +166,8 @@ try:
                 info = a2s.info((server.server_ip, server.query_port), timeout=query_timeout)
                 
                 if info.player_count >= seeding_yaml["seeded_player_limit"]:
+                    seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
+
                     print(f'{server.desc} is seeded {info.player_count}/{info.max_players}')
                     print('Moving on.')
                     seed_index += 1
@@ -141,14 +186,14 @@ try:
                 seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
 
             except Exception as err:
-                print(f"Unexpected {err=}, {type(err)=}")
-                print(f"Problem querying valid server {server.desc}. Retry {exception_retry}/3")
+                print(f"{colors.fg.red}Unexpected {err=}, {type(err)=}")
+                print(f"{colors.fg.red}Problem querying valid server {server.desc}. Retry {exception_retry}/3")
 
                 if exception_retry < 3:
                     exception_retry += 1
                     time.sleep(30)
                 else:
-                    print(f"Failed to query 3 times. Moving on.")
+                    print(f"{colors.fg.red}Failed to query 3 times. Moving on.")
                     server.valid = False
                     seed_index += 1
                     exception_retry = 0
