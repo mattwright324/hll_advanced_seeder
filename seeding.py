@@ -46,7 +46,7 @@ class colors:
 
 def seed_progress(current, total, seed_start):
     bar_length = 25
-    fraction = current / total
+    fraction = min(1.0, current / total)
 
     arrow = int(fraction * bar_length - 1) * '-' + '>'
     padding = int(bar_length - len(arrow)) * ' '
