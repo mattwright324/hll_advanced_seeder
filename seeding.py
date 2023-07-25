@@ -93,18 +93,22 @@ try:
             potential_query_ports.append(server_connect_port + offset)
 
         valid_server = False
+        quit_early = False
+        
         for query_port in potential_query_ports:
             try:
                 info = a2s.info((server_ip, query_port), timeout=3)
                 desc = try_server["description"]
-
-                if seeding_yaml["verify_name"] and hasattr(try_server, "verify_name") and try_server["verify_name"] not in info.server_name:
-                    print(f'{colors.fg.red}INVALID [ {desc} l. Server name did not contain keyword [ {try_server["verify_name"]} ] was [ {info.server_name} ]{colors.reset}')
+                
+                if seeding_yaml["verify_name"] and "verify_name" in try_server.keys() and try_server["verify_name"] not in info.server_name:
+                    print(f'{colors.fg.red}INVALID [ {desc} ]. Server name did not contain keyword [ {try_server["verify_name"]} ]{colors.reset}')
                     print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
+                    quit_early = True
                     break
                 if info.password_protected:
                     print(f'{colors.fg.red}INVALID [ {desc} ] was password protected{colors.reset}')
                     print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
+                    quit_early = True
                     break
                 
                 valid_server = True
@@ -130,8 +134,8 @@ try:
             except:
                 continue
         
-        if not valid_server:
-            print(f'{colors.fg.red}INVALID [ {try_server["description"]} ]{colors.reset}')
+        if not valid_server and not quit_early:
+            print(f'{colors.fg.red}INVALID [ {try_server["description"]} ] Could not find query port{colors.reset}')
     print()
     print()
 
