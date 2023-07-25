@@ -9,6 +9,12 @@ server_query_rate: 15
 # How many seconds on server query before a timeout
 server_query_timeout: 10
 
+# When the script is done going through your {seeding_list}, perpetually search the Steam API for additional servers to seed
+# Searches for servers with player counts between {seeded_player_limit} and {perpetual_min_players}, whose max players is 100 (not Bob the Builder 64), and whose name does not contain "CN"
+# Servers are sorted and joined in order of most players first
+perpetual_seed_from_steam: false
+perpetual_min_players: 10
+
 # List of servers to connect to and seed
 # Servers are queried with A2S / Valve Protocol
 # Use the Steam > View > Game Servers browser and copy the ip:port for the desired server(s)

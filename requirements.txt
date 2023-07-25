@@ -1,0 +1,3 @@
+python-a2s
+pyyaml
+steam[client]

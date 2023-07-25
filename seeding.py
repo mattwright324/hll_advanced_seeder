@@ -1,4 +1,5 @@
 import a2s, yaml, time, subprocess
+from steam import game_servers as gs
 
 class Server:
     def __init__(self):
@@ -70,6 +71,41 @@ try:
 
     valid_servers = []
 
+    def perpetual_seeding_search():
+        print()
+        print(f'{colors.fg.orange}Ran out of servers. Perpetual seeding enabled, searching for servers to seed...{colors.reset}')
+        
+        servers_to_add = []
+        for server_addr in gs.query_master(r'\appid\686810\password\0\full\1\empty\1', max_servers=500):
+            try:
+                info = gs.a2s_info(server_addr)
+
+                if info["players"] < seeding_yaml["seeded_player_limit"] and info["players"] > seeding_yaml["perpetual_min_players"] and info["max_players"] == 100 and "CN" not in info["name"]:
+                    servers_to_add.append((info["players"], info, server_addr))
+            except:
+                continue
+        
+        # join most populated servers first
+        servers_to_add.sort(key=lambda a: a[0], reverse=True)
+        
+        for server in servers_to_add:
+            info = server[1]
+            server_addr = server[2]
+            
+            desc = info["name"][0:10]
+                    
+            print(f'{colors.fg.green}SEEDING (Queued) [ {desc} ] query_port={server_addr[1]}, status={info["players"]}/{info["max_players"]}{colors.reset}')
+            print(f'    {colors.fg.darkgrey}{info["name"]}{colors.reset}')
+            
+            server = Server()
+            server.desc = desc
+            server.server_ip = server_addr[0]
+            server.query_port = server_addr[1]
+            server.valid = True
+            
+            valid_servers.append(server)
+            
+
     # Check the servers listed to monitor
     # Are they still valid? What's the query port?
     print('Initial server check')
@@ -91,6 +127,7 @@ try:
         potential_query_ports = []
         for offset in query_port_offset:
             potential_query_ports.append(server_connect_port + offset)
+        potential_query_ports.append(server_connect_port) # incase accidentally using query in yaml
 
         valid_server = False
         quit_early = False
@@ -139,7 +176,7 @@ try:
     print()
     print()
 
-    if len(valid_servers) > 0:
+    if len(valid_servers) > 0 or seeding_yaml["perpetual_seed_from_steam"]:
         print("Launching game and waiting 60 seconds...")
         subprocess.run("cmd /c start steam://run/686810")
         time.sleep(60)
@@ -148,13 +185,22 @@ try:
 
         seed_index = 0
         monitor_start = False
+        monitor_start2 = False
+        tried_connect = False
         seed_start = time.time()
         exception_retry = 0
 
         print("Starting seeding server rotation")
         while True:
             if seed_index >= len(valid_servers):
-                break
+                if seeding_yaml["perpetual_seed_from_steam"]:
+                    perpetual_seeding_search()
+                    
+                    if seed_index >= len(valid_servers):
+                        print(f'{colors.fg.orange}Failed to find more servers{colors.reset}')
+                        break
+                else:
+                    break
             
             server = valid_servers[seed_index]
             
@@ -169,6 +215,10 @@ try:
             try:
                 info = a2s.info((server.server_ip, server.query_port), timeout=query_timeout)
                 
+                if not monitor_start2:
+                    print(f'{colors.fg.darkgrey}{info.server_name}{colors.reset}')
+                    monitor_start2 = True
+                
                 if info.player_count >= seeding_yaml["seeded_player_limit"]:
                     seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
 
@@ -177,6 +227,7 @@ try:
                     seed_index += 1
                     exception_retry = 0
                     monitor_start = False
+                    monitor_start2 = False
                     continue
                 
                 if not tried_connect:
@@ -190,8 +241,8 @@ try:
                 seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
 
             except Exception as err:
-                print(f"{colors.fg.red}Unexpected {err=}, {type(err)=}")
-                print(f"{colors.fg.red}Problem querying valid server {server.desc}. Retry {exception_retry}/3")
+                print(f"\n{colors.fg.red}Unexpected {err=}, {type(err)=}{colors.reset}")
+                print(f"{colors.fg.red}Problem querying valid server {server.desc}. Retry {exception_retry+1}/3{colors.reset}")
 
                 if exception_retry < 3:
                     exception_retry += 1
@@ -204,8 +255,15 @@ try:
                     monitor_start = False
                     
             if seed_index >= len(valid_servers):
-                break
-            
+                if seeding_yaml["perpetual_seed_from_steam"]:
+                    perpetual_seeding_search()
+                    
+                    if seed_index >= len(valid_servers):
+                        print(f'{colors.fg.orange}Failed to find more servers{colors.reset}')
+                        break
+                else:
+                    break
+                
             time.sleep(seeding_yaml["server_query_rate"])
 
         print()
