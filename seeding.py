@@ -45,7 +45,14 @@ class colors:
         cyan = '\033[46m'
         lightgrey = '\033[47m'
 
-def seed_progress(current, total, seed_start):
+def process_exists(process_name):
+    progs = str(subprocess.check_output('tasklist'))
+    if process_name in progs:
+        return True
+    else:
+        return False
+
+def seed_progress(current, total, max_poll_count, seed_start):
     bar_length = 25
     fraction = min(1.0, current / total)
 
@@ -54,10 +61,20 @@ def seed_progress(current, total, seed_start):
     
     elapsed = (time.time() - seed_start)
     elapsed_str = time.strftime("%Hh %Mm %Ss", time.gmtime(elapsed))
+    
+    dead_percent = ''
+    threshold = int(max_poll_count / 2)
+    if seeding_yaml["move_on_if_server_dead"] and max_poll_count > 9:
+        diff = max_poll_count - info.player_count
+        thresh_diff = max_poll_count - threshold
+        
+        dead_fraction = min(1.0, diff / thresh_diff)
+        
+        dead_percent = f'Dying: {colors.fg.orange}{diff}{colors.reset}/{colors.fg.orange}{thresh_diff}  {int(dead_fraction*100)}{colors.reset}%{colors.reset}'
 
-    ending = '\n' if current >= total else '\r'
+    ending = '\n' if current >= total or diff >= thresh_diff else '\r'
 
-    print(f'Seed progress: [{colors.fg.green}{arrow}{colors.reset}{padding}]  Status: {colors.fg.green}{current}{colors.reset}/{colors.fg.green}{total}  {int(fraction*100)}{colors.reset}%  Elapsed: {colors.fg.green}{elapsed_str}{colors.reset}', end=ending)
+    print(f'Seed progress: [{colors.fg.green}{arrow}{colors.reset}{padding}]  Status: {colors.fg.green}{current}{colors.reset}/{colors.fg.green}{total}  {int(fraction*100)}{colors.reset}%  Elapsed: {colors.fg.green}{elapsed_str}{colors.reset}  {dead_percent}', end=ending)
 
 try:
     print('Loading seeding.yaml')
@@ -75,13 +92,14 @@ try:
         print()
         print(f'{colors.fg.orange}Ran out of servers. Perpetual seeding enabled, searching for servers to seed...{colors.reset}')
         
+        # Note: no password filter doesn't seem to work
         servers_to_add = []
         for server_addr in gs.query_master(r'\appid\686810\password\0\full\1\empty\1', max_servers=500):
             try:
-                info = gs.a2s_info(server_addr)
-
-                if info["players"] < seeding_yaml["seeded_player_limit"] and info["players"] > seeding_yaml["perpetual_min_players"] and info["max_players"] == 100 and "CN" not in info["name"]:
-                    servers_to_add.append((info["players"], info, server_addr))
+                info = a2s.info(server_addr, timeout=2)
+  
+                if not info.password_protected and info.player_count < 50 and info.player_count > 10 and info.max_players == 100 and "CN" not in info.server_name:
+                    servers_to_add.append((info.player_count, info, server_addr))
             except:
                 continue
         
@@ -92,10 +110,10 @@ try:
             info = server[1]
             server_addr = server[2]
             
-            desc = info["name"][0:10]
+            desc = info.server_name[0:10]
                     
-            print(f'{colors.fg.green}SEEDING (Queued) [ {desc} ] query_port={server_addr[1]}, status={info["players"]}/{info["max_players"]}{colors.reset}')
-            print(f'    {colors.fg.darkgrey}{info["name"]}{colors.reset}')
+            print(f'{colors.fg.green}SEEDING (Queued) [ {desc} ] query_port={server_addr[1]}, status={info.player_count}/{info.max_players}{colors.reset}')
+            print(f'    {colors.fg.darkgrey}{info.server_name}{colors.reset}')
             
             server = Server()
             server.desc = desc
@@ -134,7 +152,7 @@ try:
         
         for query_port in potential_query_ports:
             try:
-                info = a2s.info((server_ip, query_port), timeout=3)
+                info = a2s.info((server_ip, query_port), timeout=1)
                 desc = try_server["description"]
                 
                 if seeding_yaml["verify_name"] and "verify_name" in try_server.keys() and try_server["verify_name"] not in info.server_name:
@@ -177,11 +195,17 @@ try:
     print()
 
     if len(valid_servers) > 0 or seeding_yaml["perpetual_seed_from_steam"]:
-        print("Launching game and waiting 60 seconds...")
-        subprocess.run("cmd /c start steam://run/686810")
-        time.sleep(60)
-        print()
-        print()
+        if process_exists('HLL-Win64-Shipping.exe'):
+            print("Game already running, skipping launch and wait")
+            time.sleep(1)
+            print()
+            print()
+        else:
+            print("Launching game and waiting 60 seconds...")
+            subprocess.run("cmd /c start steam://run/686810")
+            time.sleep(60)
+            print()
+            print()
 
         seed_index = 0
         monitor_start = False
@@ -189,6 +213,7 @@ try:
         tried_connect = False
         seed_start = time.time()
         exception_retry = 0
+        max_poll_count = 0
 
         print("Starting seeding server rotation")
         while True:
@@ -197,8 +222,8 @@ try:
                     perpetual_seeding_search()
                     
                     if seed_index >= len(valid_servers):
-                        print(f'{colors.fg.orange}Failed to find more servers{colors.reset}')
-                        break
+                        print(f'{colors.fg.orange}Failed to find more servers. Waiting a couple minutes...{colors.reset}')
+                        time.sleep(180)
                 else:
                     break
             
@@ -219,8 +244,22 @@ try:
                     print(f'{colors.fg.darkgrey}{info.server_name}{colors.reset}')
                     monitor_start2 = True
                 
+                if info.player_count > max_poll_count:
+                    max_poll_count = info.player_count
+                if seeding_yaml["move_on_if_server_dead"] and max_poll_count > 9 and info.player_count <= max_poll_count / 2:
+                    seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], max_poll_count, seed_start)
+                    
+                    print(f'{colors.fg.orange}{server.desc} player count has halved, likely dead.{colors.reset}')
+                    print('Moving on.')
+                    seed_index += 1
+                    exception_retry = 0
+                    monitor_start = False
+                    monitor_start2 = False
+                    max_poll_count = 0
+                    continue
+                
                 if info.player_count >= seeding_yaml["seeded_player_limit"]:
-                    seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
+                    seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], max_poll_count, seed_start)
 
                     print(f'{server.desc} is seeded {info.player_count}/{info.max_players}')
                     print('Moving on.')
@@ -228,6 +267,7 @@ try:
                     exception_retry = 0
                     monitor_start = False
                     monitor_start2 = False
+                    max_poll_count = 0
                     continue
                 
                 if not tried_connect:
@@ -238,17 +278,17 @@ try:
                     subprocess.run(command)
                     tried_connect = True
                 
-                seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], seed_start)
+                seed_progress(info.player_count, seeding_yaml["seeded_player_limit"], max_poll_count, seed_start)
 
             except Exception as err:
                 print(f"\n{colors.fg.red}Unexpected {err=}, {type(err)=}{colors.reset}")
-                print(f"{colors.fg.red}Problem querying valid server {server.desc}. Retry {exception_retry+1}/3{colors.reset}")
+                print(f"{colors.fg.red}Problem querying valid server {server.desc}. Retry {exception_retry+1}/4{colors.reset}")
 
                 if exception_retry < 3:
                     exception_retry += 1
                     time.sleep(30)
                 else:
-                    print(f"{colors.fg.red}Failed to query 3 times. Moving on.")
+                    print(f"{colors.fg.red}Failed to query 4 times. Moving on.")
                     server.valid = False
                     seed_index += 1
                     exception_retry = 0
@@ -259,8 +299,8 @@ try:
                     perpetual_seeding_search()
                     
                     if seed_index >= len(valid_servers):
-                        print(f'{colors.fg.orange}Failed to find more servers{colors.reset}')
-                        break
+                        print(f'{colors.fg.orange}Failed to find more servers. Waiting a couple minutes...{colors.reset}')
+                        time.sleep(180)
                 else:
                     break
                 

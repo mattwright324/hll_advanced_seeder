@@ -12,6 +12,7 @@ Extended with Python for more advanced seeding automation, based on initial batc
 2. Open command prompt and install required packages
 	- `pip install -r requirements.txt`
 3. Open `config.txt` and set the time in minutes for when to close the game
+	- Note: Currently doesn't quit the seeding python script, just the game. TODO
 4. Open `seeding.yaml` to configure python script settings and servers to seed
     - Use the `Steam > View > Game Server` browser to find and copy `ip:port` for desired servers
 	- Set a verify_name for each incase they change hosts

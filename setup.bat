@@ -19,8 +19,7 @@ echo No previously scheduled task to remove. Please continue to setup completely
 ECHO:
 
 ECHO Enter the time you would like the script to start every morning.
-ECHO If you in ESPT we are targeting 10AM ET.
-ECHO So if you are in Eastern Time, enter 10:00:00. If you are in Pacific Time, enter 7:00:00. 
+ECHO For example if are targeting 10AM Eastern Time, enter 10:00:00. If you are in Pacific time, enter 7:00:00.
 ECHO:
 set /p startupTime="Enter Time: "
 
