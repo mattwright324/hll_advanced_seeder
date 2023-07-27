@@ -64,15 +64,15 @@ def seed_progress(current, total, max_poll_count, seed_start):
     
     dead_percent = ''
     threshold = int(max_poll_count / 2)
+    diff = max_poll_count - info.player_count
+    thresh_diff = max_poll_count - threshold
     if seeding_yaml["move_on_if_server_dead"] and max_poll_count > 9:
-        diff = max_poll_count - info.player_count
-        thresh_diff = max_poll_count - threshold
-        
         dead_fraction = min(1.0, diff / thresh_diff)
         
         dead_percent = f'Dying: {colors.fg.orange}{diff}{colors.reset}/{colors.fg.orange}{thresh_diff}  {int(dead_fraction*100)}{colors.reset}%{colors.reset}'
 
-    ending = '\n' if current >= total or diff >= thresh_diff else '\r'
+    progress_done = current >= total or (seeding_yaml["move_on_if_server_dead"] and max_poll_count > 9 and diff >= thresh_diff)
+    ending = '\n' if progress_done else '\r'
 
     print(f'Seed progress: [{colors.fg.green}{arrow}{colors.reset}{padding}]  Status: {colors.fg.green}{current}{colors.reset}/{colors.fg.green}{total}  {int(fraction*100)}{colors.reset}%  Elapsed: {colors.fg.green}{elapsed_str}{colors.reset}  {dead_percent}', end=ending)
 
