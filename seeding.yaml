@@ -9,6 +9,12 @@ server_query_rate: 15
 # How many seconds on server query before a timeout
 server_query_timeout: 10
 
+# Check if you've been kicked for idle by checking if your Steam display name is present on the server
+# Keep in mind, there is a rare possibility that someone else has the same name too
+# If your name is not present in the list, move on
+move_on_if_kicked: false
+player_name: SodiumEnglish
+
 # Moves on to the next server if the player pop drops by half the max it has observed.
 # Only kicks in if the max player pop has reached 9 or greater
 #     e.g. If you join a server at 40 pop and it drops to 20
@@ -19,6 +25,20 @@ move_on_if_server_dead: true
 # Servers are sorted and joined in order of most players first
 perpetual_seed_from_steam: false
 perpetual_min_players: 10
+# In perpetual mode, move on if the player count is less than {perpetual_min_players}-1
+perpetual_dead_if_empty: true
+# The maximum number of servers to queue from the server list
+# The more in the list, the more likely the ones at the bottom have been seeded or died
+perpetual_max_servers: 3
+
+# Method (options are "time" or "minutes") to determine when kill the game and stop the script
+#  "time" uses property {stop_seeding_time}
+#  "minutes" uses property {stop_seeding_minutes}
+# stop_seeding_method: time # planned option
+# Specific time
+stop_seeding_time: 10:00 pm
+# How long in minutes from script start
+# stop_seeding_minutes: 720 # planned option
 
 # List of servers to connect to and seed
 # Servers are queried with A2S / Valve Protocol

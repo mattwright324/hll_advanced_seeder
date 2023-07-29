@@ -4,6 +4,13 @@ Seeding script automatically launches the game and seeds multiple HLL servers
 
 Extended with Python for more advanced seeding automation, based on initial batch scripts from KtodaZ.
 
+## Features
+
+- Automates seeding a list of servers, moving from one to the next once each server hits 50 pop
+- Perpetual seeding mode which queries the steam server list to find more seeding servers when the defined list runs out
+	- Detects dying/dead servers to move to the next one
+	- Detects you being idle kicked and relaunches the game (reliable method)
+
 ## Setup and Install
 
 1. Install the latest Python 3.x
