@@ -1,3 +1,8 @@
 .history
 *.zip
 TaskSchedulerTemplate_Local.xml
+
+test.py
+
+.idea/
+__pycache__

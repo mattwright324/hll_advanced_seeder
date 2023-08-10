@@ -30,6 +30,13 @@ perpetual_dead_if_empty: true
 # The maximum number of servers to queue from the server list
 # The more in the list, the more likely the ones at the bottom have been seeded or died
 perpetual_max_servers: 3
+# When searching for servers, ignore servers with the following in the name (case insensitive)
+perpetual_ignore_server_name_contains: [
+  cn,
+  event,
+  training,
+  hll official
+]
 
 # Method (options are "time" or "minutes") to determine when kill the game and stop the script
 #  "time" uses property {stop_seeding_time}
