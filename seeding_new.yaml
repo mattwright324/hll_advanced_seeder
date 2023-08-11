@@ -52,16 +52,14 @@ priority_servers: [
 # Max player count before moving to the next server
 # 40 is technically seeded though it's best to stick around to at least 50-60
 seeded_player_limit: 50
-# If you are running multiple seed scripts/accounts, randomly +- limit above to prevent scripts moving on at the same time.
-seeded_player_variability: 2
+# If you are running multiple seed scripts/accounts, randomly add 0-N to the limit to mitigate scripts moving on at the same time.
+seeded_player_variability: 5
 # Delay between server poll in seconds
 server_query_rate: 15
 # Server poll timeout in seconds
 server_query_timeout: 10
-# Check if the server pop halves before moving on
-check_server_dying: true
 # Check if name is in the player list
-check_idle_kick: true
+check_idle_kick: false
 player_name: SodiumEnglish
 
 

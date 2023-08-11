@@ -3,7 +3,7 @@ import sys, yaml, time, traceback, random
 from datetime import datetime as dt, timedelta
 from steam import game_servers as gs
 # project required
-import colors as c, hll_game
+import colors as c, hll_game, stopwatches as sw
 
 # Don't launch the game, join servers, or check their player lists
 # Otherwise, operates as if it did those things for testing
@@ -50,13 +50,15 @@ debug(f'{c.darkgrey}{seeding_yaml}{c.reset}\n')
 seeding_method = str(seeding_yaml["seeding_method"]).lower()
 seeding_endtime = try_parsing_time(seeding_yaml["seeding_endtime"], "seeding_endtime")
 seeding_minutes = int(seeding_yaml["seeding_minutes"])
-priority_monitor = bool( seeding_yaml["priority_monitor"])
+priority_monitor = bool(seeding_yaml["priority_monitor"])
 priority_monitor_endtime = try_parsing_time(seeding_yaml["priority_monitor_endtime"], "priority_monitor_endtime")
 servers = list(seeding_yaml["priority_servers"])
 seeded_player_limit = int(seeding_yaml["seeded_player_limit"])
 seeded_player_variability = int(seeding_yaml["seeded_player_variability"])
 server_query_rate = int(seeding_yaml["server_query_rate"])
 server_query_timeout = int(seeding_yaml["server_query_timeout"])
+check_idle_kick = bool(seeding_yaml["check_idle_kick"])
+player_name = seeding_yaml["player_name"]
 perpetual_mode = bool(seeding_yaml["perpetual_mode"])
 perpetual_max_servers = int(seeding_yaml["perpetual_max_servers"])
 perpetual_min_players = int(seeding_yaml["perpetual_min_players"])
@@ -118,9 +120,17 @@ server_queue = []
 previously_joined = []
 
 
+def is_priority_server(server_addr):
+    for server in priority_servers:
+        if server_addr == server["server_addr"]:
+            return True
+    return False
+
+
 # server_addr   - (ip, port)
 # server_info   - {a2s_info}
-def should_server_queue(server_addr, server_info, min_players=0, name_ignore=None, verify_name=None, check_playercount=True):
+def should_server_queue(server_addr, server_info, min_players=0, name_ignore=None, verify_name=None,
+                        check_playercount=True):
     if verify_name is None:
         verify_name = []
     if name_ignore is None:
@@ -175,11 +185,7 @@ for try_server in servers:
             check = should_server_queue(server_addr, info, verify_name=split_whitespace(try_server["steam_search"]),
                                         check_playercount=False)
 
-            already_priority = False
-            # Already in priority list
-            for server in priority_servers:
-                if server["server_addr"] == server_addr:
-                    already_priority = True
+            already_priority = is_priority_server(server_addr)
 
             if check["queue"] and not already_priority:
                 potential_add.append((info["players"], server_addr, info))
@@ -192,7 +198,8 @@ for try_server in servers:
             server_addr = potential_add[0][1]
             info = potential_add[0][2]
 
-            print(f'Priority server : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(
+                f'Priority server : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
             priority_servers.append({"server_addr": server_addr, "info": info, "config": try_server})
 
     elif "address" in try_server.keys():
@@ -219,8 +226,10 @@ for try_server in servers:
                     steam_servers[server_addr] = info
 
                 if check["queue"]:
-                    print(f'Priority server : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
-                    print(f'Priority seeding : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+                    print(
+                        f'Priority server : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+                    print(
+                        f'Priority seeding : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
 
                 else:
                     pass
@@ -248,15 +257,19 @@ if not priority_monitor:
 
         check = should_server_queue(server_addr, info, min_players=min_players, check_playercount=True)
 
-        status_str = f'[{c.green}{str(info["players"])}{c.reset}/{c.green}{str(info["max_players"])}{c.reset}]'.rjust(27)
+        status_str = f'[{c.green}{str(info["players"])}{c.reset}/{c.green}{str(info["max_players"])}{c.reset}]'.rjust(
+            27)
 
         if check["queue"]:
-            print(f'{c.green}Seeding{c.reset} {status_str} : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(
+                f'{c.green}Seeding{c.reset} {status_str} : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
             server_queue.append(server_addr)
         elif info["players"] >= seeded_player_limit:
-            print(f'{c.darkgrey}Seeded{c.reset} {status_str} : {c.lightgrey}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(
+                f'{c.darkgrey}Seeded{c.reset} {status_str} : {c.lightgrey}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
         else:
-            print(f'{c.darkgrey}Skip{c.reset}   {status_str} : {c.lightgrey}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(
+                f'{c.darkgrey}Skip{c.reset}   {status_str} : {c.lightgrey}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
             print(f'  {c.darkgrey}Skip reason(s){c.reset} : {c.darkgrey}{check["reasons"]}{c.reset}')
     print()
 
@@ -274,45 +287,59 @@ printed_progress = False
 
 # Prefix for print() statements
 def nl():
-    return '\n' if printed_progress else ''
+    global printed_progress
+    prefix = '\n' if printed_progress else ''
+    printed_progress = False
+    return prefix
+
 
 try:
     print(f'{c.yellow}Starting seeding process{c.reset}')
+    print()
 
+    search_for_next = False
     next_server = True
     current_server = None
     latest_info = None
-    seed_start = time.time()
-    max_poll_count = 0
-    player_threshold = seeded_player_limit
+    sw.start("seeding")
     server_type = None
+    timeouts = 0
 
-    def server_check(current, threshold):
+    player_threshold = seeded_player_limit
+    players_max_count = 0
+    players_join_count = 0
+    players_done_count = 0
+
+
+    def server_check():
         global next_server, current_server
-        debug(f'server_check({current}, {threshold})')
 
         priority_server = None
-        if priority_monitor is True:
-            start = time.time()
+        if priority_monitor is True and not is_priority_server(current_server):
+            # typically less than a second for ~10 servers
             priority_server = priority_server_check()
-            debug(f'{nl()}{c.darkgrey}{time.time()-start}s priority check - {priority_server}{c.reset}')
 
             if priority_server is not None and priority_server is not current_server:
+                print(f'{c.orange}Priority server now seeding, switching{c.reset}')
                 server_queue.insert(0, priority_server)
                 next_server = True
 
-        if (current_server is None or current >= threshold) and perpetual_mode and priority_server is None:
+        if current_server is None and len(server_queue) == 0 and perpetual_mode and priority_server is None:
             max = perpetual_max_servers
             if priority_monitor:
                 max = 1
 
+            # typically ~30 seconds for ~250 servers assuming early disqualify
+            sw.start("perpetual")
             perpetual_servers = perpetual_search(max_servers=max)
-            debug(f'perpetual - {perpetual_servers}')
+            debug(f'{nl()}{c.darkgrey}{sw.seconds("perpetual")}s perpetual search - {perpetual_servers}{c.reset}')
 
             if perpetual_servers is not None and len(perpetual_servers) > 0:
                 for server in perpetual_servers:
                     server_queue.append(server)
                 next_server = True
+            print()
+
 
     # Keep checking priority server states and switch to them when needed
     def priority_server_check():
@@ -343,13 +370,17 @@ try:
     # Perpetual mode query server list again for seeding servers and queue up
     def perpetual_search(max_servers=perpetual_max_servers):
         print()
-        print(f'{nl()}{c.yellow}Perpetual mode searching for more seeding servers...{c.reset}')
-        print()
+        print(f'{c.yellow}Perpetual mode searching for more seeding servers...{c.reset}')
 
+        early_ignored = 0
         potential_add = []
         for server_addr in steam_servers:
-            early_check = should_server_queue(server_addr, steam_servers[server_addr], check_playercount=False)
-            if not early_check:
+            early_check = should_server_queue(server_addr, steam_servers[server_addr],
+                                              name_ignore=ignore_name_contains,
+                                              check_playercount=False)
+            if not early_check["queue"]:
+                early_ignored += 1
+                # debug(f'{c.darkgrey}Early disqualify {server_addr} {early_check["reasons"]} {steam_servers[server_addr]["name"]}{c.reset}')
                 continue
 
             try:
@@ -363,6 +394,8 @@ try:
                 continue
         potential_add.sort(key=lambda a: a[0], reverse=True)
 
+        debug(f'{c.darkgrey}{early_ignored} servers early ignored{c.reset}')
+
         to_return = []
         i = 1
         for server in potential_add:
@@ -370,31 +403,33 @@ try:
                 break
             server_addr = server[1]
             info = steam_servers[server_addr]
-            status_str = f'[{c.green}{str(info["players"])}{c.reset}/{c.green}{str(info["max_players"])}{c.reset}]'.rjust(27)
-            print(f'{c.green}Queued{c.reset} {status_str} : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            status_str = f'[{c.green}{str(info["players"])}{c.reset}/{c.green}{str(info["max_players"])}{c.reset}]'.rjust(
+                27)
+            print(
+                f'{c.green}Queued{c.reset} {status_str} : {c.lightblue}{str(server_addr).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
             to_return.append(server_addr)
             i += 1
         return to_return
 
-    def seed_progress(current, total, max_poll_count=0, seed_start=time.time()):
+
+    def seed_progress(current, total, players_max_count=0, timeouts=0):
         bar_length = 15
-        fraction = min(1.0, current/total)
+        fraction = min(1.0, current / total)
         arrow = int(fraction * bar_length - 1) * '-' + '>'
         padding = int(bar_length - len(arrow)) * ' '
 
-        elapsed = (time.time() - seed_start)
-
-        threshold = int(max_poll_count / 2)
-        diff = max_poll_count - current
-        thresh_diff = max_poll_count - threshold
-        dead_fraction = min(1.0, diff / thresh_diff)
+        threshold = int(players_max_count / 2)
+        diff = players_max_count - current
+        thresh_diff = players_max_count - threshold
+        dead_fraction = min(1.0, diff / min(1.0, thresh_diff))
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
-        status = f'Status: {c.green}{current}{c.reset}/{c.green}{total}  {int(fraction * 100)}{c.reset}%'
-        elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(elapsed))}{c.reset}'
-        dying = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
+        status_str = f'Status: {c.green}{current}{c.reset}/{c.green}{total}  {int(fraction * 100)}{c.reset}%'
+        elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}'
+        dying_str = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
+        timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{4}{c.reset}'
 
-        value = f'Seed progress {progress_bar} : {status}  {elapsed_str}  {dying}'
+        value = f'Seed progress {progress_bar}  {status_str}  {elapsed_str}  {dying_str}  {timeout_str}'
         print("\r{0}".format(value), end='')
         global printed_progress
         printed_progress = True
@@ -408,66 +443,95 @@ try:
             # no servers and no ongoing processes, script done
             break
 
-        if hll_game.did_game_crash() and not debug_no_game:
-            print(f'{c.orange}Game crashed{c.reset}')
-            hll_game.wait_until_dead()
-            hll_game.launch_and_wait()
-
-            status_str = f'[{c.green}{str(info["players"])}{c.reset}/{c.green}{str(info["max_players"])}{c.reset}]'.rjust(27)
-            print(f'Connecting {status_str} : {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
-            hll_game.join_server_addr(current_server)
-            time.sleep(15)
-
-        if latest_info is not None:
-            server_check(latest_info["players"], player_threshold)
-        else:
-            server_check(1, 1)
+        server_check()
 
         if len(server_queue) >= 1 and next_server:
             current_server = server_queue.pop(0)
             info = steam_servers[current_server]
             previously_joined.append(current_server)
             next_server = False
-            max_poll_count = 0
-            seed_start = time.time()
+            players_max_count = 0
+            timeouts = 0
+            sw.start("seeding")
             player_threshold = seeded_player_limit + random.randrange(0, seeded_player_variability)
+            player_threshold = min(player_threshold, info["max_players"])
+            server_type = "Priority" if is_priority_server(current_server) else "Perpetual"
             print()
-            print(f'{nl()}{c.yellow}Monitoring Server{c.reset}')
+            print(f'{nl()}{c.yellow}Monitoring Server ({server_type}){c.reset}')
             printed_progress = False
-            print(f'Connecting : {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
 
             if not debug_no_game:
+                sw.start("idle_check")
                 hll_game.join_server_addr(current_server)
                 time.sleep(15)
 
-        if current_server is None:
-            print(f'{c.darkgrey}current_server = None{c.reset}')
+        if current_server is None and len(server_queue) == 0:
+            print(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) == 0{c.reset}')
+            continue
+        elif current_server is None and len(server_queue) >= 1:
+            print(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) >= 1{c.reset}')
+            next_server = True
             continue
 
         try:
             latest_info = gs.a2s_info(current_server, timeout=server_query_timeout)
 
             players = latest_info["players"]
-            if players > max_poll_count:
-                max_poll_count = players
+            if players > players_max_count:
+                players_max_count = players
 
             seed_progress(players, player_threshold,
-                          max_poll_count=max_poll_count,
-                          seed_start=seed_start)
+                          players_max_count=players_max_count,
+                          timeouts=timeouts)
 
-            # try:
-            #     players = gs.a2s_players(current_server, timeout=server_query_timeout)
-            # except Exception as err:
-            #     players = None
+            if players_max_count > perpetual_min_players and players <= players_max_count / 2:
+                print(f'{nl()}{c.orange}Player count halved, server likely dying.{c.reset}')
+                current_server = None
+            elif players <= perpetual_min_players and not is_priority_server(current_server):
+                print(f'{nl()}{c.orange}Perpetual server below {perpetual_min_players} players{c.reset}')
+                current_server = None
+            elif players >= player_threshold:
+                print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
+                current_server = None
+
+            if not debug_no_game:
+                if hll_game.did_game_crash():
+                    print(f'{nl()}{c.orange}Game crashed{c.reset}')
+                    hll_game.wait_until_dead()
+                    hll_game.launch_and_wait()
+
+                    status_str = f'[{c.green}{str(latest_info["players"])}{c.reset}/{c.green}{str(latest_info["max_players"])}{c.reset}]'.rjust(27)
+                    print(f'Connecting {status_str} {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+                    hll_game.join_server_addr(current_server)
+                    time.sleep(15)
+
+                elif check_idle_kick and sw.seconds("idle_check") > 60:
+                    try:
+                        players = gs.a2s_players(current_server, timeout=server_query_timeout)
+
+                        names = []
+                        for player in players:
+                            names.append(player["name"])
+
+                        name_present = player_name.lower() in (string.lower() for string in names)
+
+                        if not name_present:
+                            print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
+                            hll_game.relaunch_and_wait()
+                            current_server = None
+
+                    except Exception as err:
+                        pass
 
             time.sleep(server_query_rate)
         except Exception as err:
-            traceback.print_exc()
-            print(f"{nl()}{c.red}Unexpected B {err=}, {type(err)=}{c.reset}")
+            timeouts += 1  # not a timeout but still quit if it errors N times
+            debug(f"{nl()}{c.red}Unexpected B {err=}, {type(err)=}{c.reset}")
             continue
 
     print()
-    print(f"{c.yellow}Seeding done!{c.reset}")
+    print(f"{c.lightgreen}Seeding done!{c.reset}")
 except Exception as err:
     traceback.print_exc()
     print(f"{nl()}{c.red}Unexpected A {err=}, {type(err)=}{c.reset}")

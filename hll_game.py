@@ -28,6 +28,11 @@ def is_running():
     return __process_exists(hll_exe)
 
 
+def is_fully_running():
+    return (is_running() and __process_exists(bugreport_exe)
+            and __process_exists(overlay_exe) and __process_exists(crash_window_exe))
+
+
 def kill():
     if is_running():
         __process_kill(hll_exe)
@@ -52,9 +57,7 @@ def join_server_addr(server_addr):
 def wait_until_running():
     # start = time.time()
     while True:
-        if (__process_exists(launch_exe) or
-                not (is_running() and __process_exists(bugreport_exe)
-                     and __process_exists(overlay_exe) and __process_exists(crash_window_exe))):
+        if __process_exists(launch_exe) or not is_fully_running():
             time.sleep(1)
         else:
             break
