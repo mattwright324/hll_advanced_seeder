@@ -81,13 +81,23 @@ else:
 plan_runtime = (stop_datetime - start_datetime).total_seconds()
 plan_runtime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_runtime))
 
+stop_priority_datetime = start_datetime.replace(hour=seeding_endtime.hour, minute=seeding_endtime.minute, second=0,
+                                           microsecond=0)
+if stop_priority_datetime < start_datetime:
+    stop_priority_datetime += timedelta(days=1)
+
+plan_prioritytime = (stop_datetime - start_datetime).total_seconds()
+plan_prioritytime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_prioritytime))
+
 print(f'{c.yellow}Summary{c.reset}')
-print(f'Run method       : {c.lightblue}{seeding_method}{c.reset} or when done')
-print(f'Start time       : {c.lightblue}{start_datetime}{c.reset}')
-print(f'Plan end time    : {c.lightblue}{stop_datetime}{c.reset} or {c.darkgrey}{plan_runtime_str} from start{c.reset}')
-print(f'Perpetual mode   : {c.green if perpetual_mode else c.darkgrey}{perpetual_mode}{c.reset}')
-print(f'Priority monitor : {c.green if priority_monitor else c.darkgrey}{priority_monitor}{c.reset}')
-print(f'Servers listed   : {c.lightblue}{len(servers)}{c.reset}')
+print(f'Run method        : {c.lightblue}{seeding_method}{c.reset} or when done')
+print(f'Start time        : {c.lightblue}{start_datetime}{c.reset}')
+print(f'Plan end time     : {c.lightblue}{stop_datetime}{c.reset} or {c.darkgrey}{plan_runtime_str} from start{c.reset}')
+print(f'Perpetual mode    : {c.green if perpetual_mode else c.darkgrey}{perpetual_mode}{c.reset}')
+print(f'Priority monitor  : {c.green if priority_monitor else c.darkgrey}{priority_monitor}{c.reset}')
+if priority_monitor:
+    print(f'Priority end time : {c.lightblue}{stop_priority_datetime}{c.reset} or {c.darkgrey}{plan_prioritytime_str} from start{c.reset}')
+print(f'Servers listed    : {c.lightblue}{len(servers)}{c.reset}')
 print()
 
 do_steam_search = perpetual_mode
@@ -320,7 +330,7 @@ try:
             priority_server = priority_server_check()
 
             if priority_server is not None and priority_server is not current_server:
-                print(f'{c.orange}Priority server now seeding, switching{c.reset}')
+                print(f'{nl()}{c.orange}Priority server now seeding, switching{c.reset}')
                 server_queue.insert(0, priority_server)
                 next_server = True
 
@@ -421,7 +431,7 @@ try:
         threshold = int(players_max_count / 2)
         diff = players_max_count - current
         thresh_diff = players_max_count - threshold
-        dead_fraction = min(1.0, diff / min(1.0, thresh_diff))
+        dead_fraction = min(1.0, diff / thresh_diff)
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
         status_str = f'Status: {c.green}{current}{c.reset}/{c.green}{total}  {int(fraction * 100)}{c.reset}%'
@@ -439,7 +449,7 @@ try:
         time.sleep(1)
         if next_server and len(server_queue) == 0 and not priority_monitor and not perpetual_mode:
             print()
-            print(f'Ran out of servers. No priority or perpetual modes enabled.')
+            print(f'Ran out of servers.')
             # no servers and no ongoing processes, script done
             break
 
@@ -459,18 +469,32 @@ try:
             print()
             print(f'{nl()}{c.yellow}Monitoring Server ({server_type}){c.reset}')
             printed_progress = False
-            print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+            print(f'{c.darkgrey}{info["name"]}{c.reset}')
+            print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
 
             if not debug_no_game:
                 sw.start("idle_check")
                 hll_game.join_server_addr(current_server)
                 time.sleep(15)
 
+        if dt.today() >= stop_datetime:
+            print()
+            print(f'{nl()}{c.yellow}Seeding stop time reached{c.reset}')
+            hll_game.kill()
+            hll_game.wait_until_dead()
+            break
+        elif priority_monitor and dt.today() >= stop_priority_datetime:
+            print(f'{nl()}{c.orange}Priority monitor stop time reached.{c.reset}')
+            priority_monitor = False
+
+            if is_priority_server(current_server):
+                current_server = None
+            continue
         if current_server is None and len(server_queue) == 0:
-            print(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) == 0{c.reset}')
+            debug(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) == 0{c.reset}')
             continue
         elif current_server is None and len(server_queue) >= 1:
-            print(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) >= 1{c.reset}')
+            debug(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) >= 1{c.reset}')
             next_server = True
             continue
 
@@ -498,11 +522,11 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     print(f'{nl()}{c.orange}Game crashed{c.reset}')
+                    print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                     hll_game.wait_until_dead()
                     hll_game.launch_and_wait()
 
-                    status_str = f'[{c.green}{str(latest_info["players"])}{c.reset}/{c.green}{str(latest_info["max_players"])}{c.reset}]'.rjust(27)
-                    print(f'Connecting {status_str} {c.lightblue}{str(current_server).ljust(27)}{c.reset}{c.darkgrey}{info["name"]}{c.reset}')
+                    print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
                     hll_game.join_server_addr(current_server)
                     time.sleep(15)
 

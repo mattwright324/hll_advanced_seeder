@@ -19,19 +19,19 @@ priority_servers: [
   # only seed/join if others are on trying and leave if they leave
   {
     steam_search: brewdawg east,
-    min_players: 2
+    min_players: 3
   },
   {
     steam_search: chad stuart flare,
-    min_players: 2
+    min_players: 4
   },
   {
     steam_search: rotn rangers,
-    min_players: 2
+    min_players: 4
   },
   {
     steam_search: brewdawg west,
-    min_players: 2
+    min_players: 3
   },
 ]
 # Example (ip:port) with optional name verification
