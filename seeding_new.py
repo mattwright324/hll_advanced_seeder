@@ -86,7 +86,7 @@ stop_priority_datetime = start_datetime.replace(hour=seeding_endtime.hour, minut
 if stop_priority_datetime < start_datetime:
     stop_priority_datetime += timedelta(days=1)
 
-plan_prioritytime = (stop_datetime - start_datetime).total_seconds()
+plan_prioritytime = (stop_priority_datetime - start_datetime).total_seconds()
 plan_prioritytime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_prioritytime))
 
 print(f'{c.yellow}Summary{c.reset}')
