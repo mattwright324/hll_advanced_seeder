@@ -86,7 +86,7 @@ def launch_and_wait():
 
 
 def relaunch_and_wait():
-    if is_running():
-        kill()
-        wait_until_dead()
-        launch_and_wait()
+    kill()
+    wait_until_dead()
+    launch_and_wait()
+

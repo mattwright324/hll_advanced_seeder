@@ -7,7 +7,7 @@ import colors as c, hll_game, stopwatches as sw
 
 # Don't launch the game, join servers, or check their player lists
 # Otherwise, operates as if it did those things for testing
-debug_no_game = True
+debug_no_game = False
 # Print extra logs in a few places
 debug_extra_logs = False
 
@@ -445,7 +445,7 @@ try:
         dying_str = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
         timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{4}{c.reset}'
 
-        value = f'Seed progress {progress_bar}  {status_str}  {elapsed_str}  {dying_str}  {timeout_str}'
+        value = f'Seed progress {progress_bar}  {status_str}  {elapsed_str}  {dying_str}  {timeout_str}  '
         print("\r{0}".format(value), end='')
         global printed_progress
         printed_progress = True
@@ -515,23 +515,22 @@ try:
                           players_max_count=players_max_count,
                           timeouts=timeouts)
 
-            if is_priority_server(current_server):
-                min_players = 0
-                config = get_priority_config(current_server)
-                if "min_players" in config:
-                    min_players = int(config["min_players"])
+            min_players = 0
+            config = get_priority_config(current_server)
+            if "min_players" in config:
+                min_players = int(config["min_players"])
 
-                if players < min_players:
-                    print(f'{nl()}{c.orange}Priority server below {min_players} players{c.reset}')
-                    current_server = None
-            elif players_max_count > perpetual_min_players and players <= players_max_count / 2:
-                print(f'{nl()}{c.orange}Player count halved, server likely dying.{c.reset}')
+            if players >= player_threshold:
+                print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
+                current_server = None
+            elif is_priority_server(current_server) and players < min_players:
+                print(f'{nl()}{c.orange}Priority server below configured {min_players} players{c.reset}')
                 current_server = None
             elif players < perpetual_min_players and not is_priority_server(current_server):
                 print(f'{nl()}{c.orange}Perpetual server below {perpetual_min_players} players{c.reset}')
                 current_server = None
-            elif players >= player_threshold:
-                print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
+            elif players_max_count > perpetual_min_players and players <= players_max_count / 2:
+                print(f'{nl()}{c.orange}Player count halved, server likely dying{c.reset}')
                 current_server = None
 
             if not debug_no_game:
