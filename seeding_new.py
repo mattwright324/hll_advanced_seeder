@@ -579,6 +579,7 @@ try:
                 current_server = None
 
             debug(f"{nl()}{c.red}Unexpected B {err=}, {type(err)=}{c.reset}")
+            time.sleep(server_query_rate)
             continue
 
     print()
