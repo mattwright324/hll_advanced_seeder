@@ -137,6 +137,12 @@ def is_priority_server(server_addr):
     return False
 
 
+def get_priority_config(server_addr):
+    for server in priority_servers:
+        if server_addr == server["server_addr"]:
+            return server["config"]
+
+
 # server_addr   - (ip, port)
 # server_info   - {a2s_info}
 def should_server_queue(server_addr, server_info, min_players=0, name_ignore=None, verify_name=None,
@@ -509,10 +515,19 @@ try:
                           players_max_count=players_max_count,
                           timeouts=timeouts)
 
-            if players_max_count > perpetual_min_players and players <= players_max_count / 2:
+            if is_priority_server(current_server):
+                min_players = 0
+                config = get_priority_config(current_server)
+                if "min_players" in config:
+                    min_players = int(config["min_players"])
+
+                if players < min_players:
+                    print(f'{nl()}{c.orange}Priority server below {min_players} players{c.reset}')
+                    current_server = None
+            elif players_max_count > perpetual_min_players and players <= players_max_count / 2:
                 print(f'{nl()}{c.orange}Player count halved, server likely dying.{c.reset}')
                 current_server = None
-            elif players <= perpetual_min_players and not is_priority_server(current_server):
+            elif players < perpetual_min_players and not is_priority_server(current_server):
                 print(f'{nl()}{c.orange}Perpetual server below {perpetual_min_players} players{c.reset}')
                 current_server = None
             elif players >= player_threshold:

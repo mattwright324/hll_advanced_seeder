@@ -27,7 +27,7 @@ priority_servers: [
   },
   {
     steam_search: rotn rangers,
-    min_players: 4
+    min_players: 6
   },
   {
     steam_search: brewdawg west,
