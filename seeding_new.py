@@ -57,6 +57,7 @@ seeded_player_limit = int(seeding_yaml["seeded_player_limit"])
 seeded_player_variability = int(seeding_yaml["seeded_player_variability"])
 server_query_rate = int(seeding_yaml["server_query_rate"])
 server_query_timeout = int(seeding_yaml["server_query_timeout"])
+query_timeout_limit = int(seeding_yaml["query_timeout_limit"])
 check_idle_kick = bool(seeding_yaml["check_idle_kick"])
 player_name = seeding_yaml["player_name"]
 perpetual_mode = bool(seeding_yaml["perpetual_mode"])
@@ -322,6 +323,8 @@ try:
     timeouts = 0
 
     player_threshold = seeded_player_limit
+    player_minimum = 0
+
     players_max_count = 0
     players_join_count = 0
     players_done_count = 0
@@ -336,7 +339,8 @@ try:
             priority_server = priority_server_check()
 
             if priority_server is not None and priority_server is not current_server:
-                print(f'{nl()}{c.orange}Priority server now seeding, switching{c.reset}')
+                print()
+                print(f'{c.lightcyan}Priority server now seeding{c.reset}')
                 server_queue.insert(0, priority_server)
                 next_server = True
 
@@ -386,7 +390,7 @@ try:
     # Perpetual mode query server list again for seeding servers and queue up
     def perpetual_search(max_servers=perpetual_max_servers):
         print()
-        print(f'{c.yellow}Perpetual mode searching for more seeding servers...{c.reset}')
+        print(f'{c.lightcyan}Perpetual mode searching for more seeding servers...{c.reset}')
 
         early_ignored = 0
         potential_add = []
@@ -443,7 +447,7 @@ try:
         status_str = f'Status: {c.green}{current}{c.reset}/{c.green}{total}  {int(fraction * 100)}{c.reset}%'
         elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}'
         dying_str = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
-        timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{4}{c.reset}'
+        timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}'
 
         value = f'Seed progress {progress_bar}  {status_str}  {elapsed_str}  {dying_str}  {timeout_str}  '
         print("\r{0}".format(value), end='')
@@ -477,6 +481,11 @@ try:
             printed_progress = False
             print(f'{c.darkgrey}{info["name"]}{c.reset}')
             print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
+
+            player_minimum = 0
+            config = get_priority_config(current_server)
+            if "min_players" in config:
+                player_minimum = int(config["min_players"])
 
             if not debug_no_game:
                 sw.start("idle_check")
@@ -514,11 +523,6 @@ try:
             seed_progress(players, player_threshold,
                           players_max_count=players_max_count,
                           timeouts=timeouts)
-
-            min_players = 0
-            config = get_priority_config(current_server)
-            if "min_players" in config:
-                min_players = int(config["min_players"])
 
             if players >= player_threshold:
                 print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
@@ -565,6 +569,11 @@ try:
             time.sleep(server_query_rate)
         except Exception as err:
             timeouts += 1  # not a timeout but still quit if it errors N times
+
+            if timeouts >= query_timeout_limit:
+                print(f'{nl()}{c.red}Reached timeout limit{c.reset}')
+                current_server = None
+
             debug(f"{nl()}{c.red}Unexpected B {err=}, {type(err)=}{c.reset}")
             continue
 

@@ -28,3 +28,28 @@ yellow = '\033[93m'
 lightblue = '\033[94m'
 pink = '\033[95m'
 lightcyan = '\033[96m'
+
+
+def demo():
+    print(f'{black}black{reset}')
+    print(f'{red}red{reset}')
+    print(f'{green}green{reset}')
+    print(f'{orange}orange{reset}')
+    print(f'{blue}blue{reset}')
+    print(f'{purple}purple{reset}')
+    print(f'{cyan}cyan{reset}')
+    print(f'{lightgrey}lightgrey{reset}')
+    print(f'{darkgrey}darkgrey{reset}')
+    print(f'{lightred}lightred{reset}')
+    print(f'{lightgreen}lightgreen{reset}')
+    print(f'{yellow}yellow{reset}')
+    print(f'{lightblue}lightblue{reset}')
+    print(f'{pink}pink{reset}')
+    print(f'{lightcyan}lightcyan{reset}')
+
+    print(f'{bold}bold{reset}')
+    print(f'{disable}disable{reset}')
+    print(f'{underline}underline{reset}')
+    print(f'{reverse}reverse{reset}')
+    print(f'{strikethrough}strikethrough{reset}')
+    print(f'{invisible}invisible{reset}')
