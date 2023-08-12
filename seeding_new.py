@@ -82,7 +82,7 @@ else:
 plan_runtime = (stop_datetime - start_datetime).total_seconds()
 plan_runtime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_runtime))
 
-stop_priority_datetime = start_datetime.replace(hour=seeding_endtime.hour, minute=seeding_endtime.minute, second=0,
+stop_priority_datetime = start_datetime.replace(hour=priority_monitor_endtime.hour, minute=priority_monitor_endtime.minute, second=0,
                                            microsecond=0)
 if stop_priority_datetime < start_datetime:
     stop_priority_datetime += timedelta(days=1)
@@ -484,7 +484,7 @@ try:
 
             player_minimum = 0
             config = get_priority_config(current_server)
-            if "min_players" in config:
+            if config is not None and "min_players" in config:
                 player_minimum = int(config["min_players"])
 
             if not debug_no_game:
