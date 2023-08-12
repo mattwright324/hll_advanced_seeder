@@ -59,7 +59,7 @@ server_query_rate: 15
 # Server poll timeout in seconds
 server_query_timeout: 10
 # How many timeouts before moving on when monitoring a server
-query_timeout_limit: 5
+query_timeout_limit: 12
 # Check if name is in the player list
 check_idle_kick: false
 player_name: SodiumEnglish

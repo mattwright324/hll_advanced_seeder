@@ -570,6 +570,10 @@ try:
         except Exception as err:
             timeouts += 1  # not a timeout but still quit if it errors N times
 
+            seed_progress(latest_info["players"], player_threshold,
+                          players_max_count=players_max_count,
+                          timeouts=timeouts)
+
             if timeouts >= query_timeout_limit:
                 print(f'{nl()}{c.red}Reached timeout limit{c.reset}')
                 current_server = None
