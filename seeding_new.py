@@ -463,6 +463,10 @@ try:
             # no servers and no ongoing processes, script done
             break
 
+        # Attempt longer delays between queries
+        sleep = server_query_rate * min(1, (timeouts + 1))
+        time.sleep(sleep)
+
         server_check()
 
         if len(server_queue) >= 1 and next_server:
@@ -566,7 +570,6 @@ try:
                     except Exception as err:
                         pass
 
-            time.sleep(server_query_rate)
         except Exception as err:
             timeouts += 1  # not a timeout but still quit if it errors N times
 
@@ -579,7 +582,6 @@ try:
                 current_server = None
 
             debug(f"{nl()}{c.red}Unexpected B {err=}, {type(err)=}{c.reset}")
-            time.sleep(server_query_rate)
             continue
 
     print()
