@@ -487,9 +487,12 @@ try:
             print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
 
             player_minimum = 0
-            config = get_priority_config(current_server)
-            if config is not None and "min_players" in config:
-                player_minimum = int(config["min_players"])
+            if is_priority_server(current_server):
+                config = get_priority_config(current_server)
+                if config is not None and "min_players" in config:
+                    player_minimum = int(config["min_players"])
+            else:
+                player_minimum = perpetual_min_players
 
             if not debug_no_game:
                 sw.start("idle_check")
@@ -531,13 +534,13 @@ try:
             if players >= player_threshold:
                 print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
                 current_server = None
-            elif is_priority_server(current_server) and players < min_players:
-                print(f'{nl()}{c.orange}Priority server below configured {min_players} players{c.reset}')
+            elif is_priority_server(current_server) and players < player_minimum:
+                print(f'{nl()}{c.orange}Priority server below configured {player_minimum} players{c.reset}')
                 current_server = None
-            elif players < perpetual_min_players and not is_priority_server(current_server):
-                print(f'{nl()}{c.orange}Perpetual server below {perpetual_min_players} players{c.reset}')
+            elif players < player_minimum and not is_priority_server(current_server):
+                print(f'{nl()}{c.orange}Perpetual server below {player_minimum} players{c.reset}')
                 current_server = None
-            elif players_max_count > perpetual_min_players and players <= players_max_count / 2:
+            elif players_max_count > player_minimum and players <= players_max_count / 2:
                 print(f'{nl()}{c.orange}Player count halved, server likely dying{c.reset}')
                 current_server = None
 
