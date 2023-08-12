@@ -464,7 +464,7 @@ try:
             break
 
         # Attempt longer delays between queries
-        sleep = server_query_rate * (timeouts + 1)
+        sleep = server_query_rate * max(1, (timeouts + 1))
         time.sleep(sleep)
 
         server_check()
