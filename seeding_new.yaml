@@ -69,7 +69,7 @@ player_name: SodiumEnglish
 # Help out the rest of the community!
 perpetual_mode: true
 # How many servers to queue for seeding (ordered from most to least populated)
-perpetual_max_servers: 3
+perpetual_max_servers: 2
 # Minimum players to consider seeding
 perpetual_min_players: 10
 # Do not seed servers with these terms in the name (case-insensitive)

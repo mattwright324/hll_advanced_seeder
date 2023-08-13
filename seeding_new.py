@@ -432,9 +432,9 @@ try:
         return to_return
 
 
-    def seed_progress(current, total, players_max_count=0, timeouts=0):
+    def seed_progress(current):
         bar_length = 15
-        fraction = min(1.0, current / total)
+        fraction = min(1.0, current / player_threshold)
         arrow = int(fraction * bar_length - 1) * '-' + '>'
         padding = int(bar_length - len(arrow)) * ' '
 
@@ -444,7 +444,8 @@ try:
         dead_fraction = min(1.0, diff / thresh_diff)
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
-        status_str = f'Status: {c.green}{current}{c.reset}/{c.green}{total}  {int(fraction * 100)}{c.reset}%'
+        status_str = (f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
+                      f'  {c.green}{int(fraction * 100)}{c.reset}%')
         elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}'
         dying_str = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
         timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}'
@@ -464,7 +465,7 @@ try:
             break
 
         # Attempt longer delays between queries
-        sleep = server_query_rate * max(1, (timeouts + 1))
+        sleep = server_query_rate + (10 * max(0, timeouts))
         time.sleep(sleep)
 
         server_check()
@@ -527,9 +528,7 @@ try:
             if players > players_max_count:
                 players_max_count = players
 
-            seed_progress(players, player_threshold,
-                          players_max_count=players_max_count,
-                          timeouts=timeouts)
+            seed_progress(players)
 
             if players >= player_threshold:
                 print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
@@ -576,9 +575,7 @@ try:
         except Exception as err:
             timeouts += 1  # not a timeout but still quit if it errors N times
 
-            seed_progress(latest_info["players"], player_threshold,
-                          players_max_count=players_max_count,
-                          timeouts=timeouts)
+            seed_progress(latest_info["players"])
 
             if timeouts >= query_timeout_limit:
                 print(f'{nl()}{c.red}Reached timeout limit{c.reset}')
