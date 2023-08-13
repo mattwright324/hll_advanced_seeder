@@ -545,13 +545,14 @@ try:
 
             if not debug_no_game:
                 if hll_game.did_game_crash():
-                    print(f'{nl()}{c.orange}Game crashed{c.reset}')
+                    print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                     hll_game.relaunch_and_wait()
 
-                    print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
-                    hll_game.join_server_addr(current_server)
-                    time.sleep(15)
+                    if current_server is not None:
+                        print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
+                        hll_game.join_server_addr(current_server)
+                        time.sleep(15)
 
                 elif check_idle_kick and sw.seconds("idle_check") > 60:
                     try:
