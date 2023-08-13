@@ -38,6 +38,17 @@ def kill():
         __process_kill(hll_exe)
 
 
+def kill_crash_window():
+    if __process_exists(crash_window_exe):
+        __process_kill(crash_window_exe)
+
+
+def kill_all():
+    for process_name in [hll_exe, crash_window_exe, bugreport_exe, overlay_exe]:
+        if __process_exists(process_name):
+            __process_kill(process_name)
+
+
 def launch():
     if not is_running():
         subprocess.run(f"cmd /c start steam://run/{hll_steam_id}")
@@ -87,6 +98,7 @@ def launch_and_wait():
 
 def relaunch_and_wait():
     kill()
+    kill_crash_window()
     wait_until_dead()
     launch_and_wait()
 

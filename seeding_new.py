@@ -547,8 +547,7 @@ try:
                 if hll_game.did_game_crash():
                     print(f'{nl()}{c.orange}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
-                    hll_game.wait_until_dead()
-                    hll_game.launch_and_wait()
+                    hll_game.relaunch_and_wait()
 
                     print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
                     hll_game.join_server_addr(current_server)
