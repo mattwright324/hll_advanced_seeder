@@ -36,9 +36,14 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 	- Check the box to add Python to PATH
 2. Open command prompt and install required packages
 	- `pip install -r requirements.txt`
-3. Open `seeding.yaml` to configure python script settings and servers to seed
-    - Use the `Steam > View > Game Server` browser to find and copy `ip:port` for desired servers
-	- Set a verify_name for each incase they change hosts
+3. Open `seeding.yaml` to configure script settings and servers to seed
+    - Most default values should be fine as is though can be tweaked however you want
+    - Most relevant properties you'll probably want to change:
+       - `seeding_method` and properties under it
+       - `priority_servers`
+       - `check_idle_kick` and `player_name`
+       - `priority_monitor`
+       - `perpetual_mode`
 4. Run `setup.bat` to create a scheduled task that will wake up the computer and run the seeding script
 
 To verify a task is scheduled use `verify.bat`.
@@ -49,6 +54,39 @@ To manually start the script again use `runGame.bat` (this is what the scheduled
 
 ## How it works
 
-The python script uses A2S or the Valve Protocol to query the specified game servers for their current player count at a specified interval of seconds.
+The python script uses A2S or the Valve Protocol to query game servers 
+for their current player count and current player names joined.
 
 https://developer.valvesoftware.com/wiki/Server_queries
+
+It also uses the Valve Master Server Query Protocol to search for all current Hell Let Loose servers 
+to search for ones that match your priority server criteria or for perpetual mode.
+
+https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
+
+## Potential usages
+
+1. I want to seed my priority servers then help out other seeding community servers. However, I also want it to go back to a priority server if it starts seeding or crashes later on.
+
+Current seeding yaml settings are set to do this. `priority_monitor` and `perpetual_mode` are on.
+
+It will go back and forth between priority and random perpetual servers as needed.
+
+2. I only want to seed my priority servers and nothing else.
+
+Disable `perpetual_mode` in the seeding yaml.
+
+3. I want to run multiple seeding accounts with this script.
+
+Recommended to stagger the priority_server `min_players` and potentially change `seeded_player_variability` depending on number of
+accounts.
+These settings are to mitigate issues where multiple accounts could get stuck on the same server that is dead 
+or so that they all don't leave a just-seeded server at the exact same time.
+
+For example:
+
+- Seed account 1  `priority_min_players: 0`  
+- Seed account 2  `priority_min_players: 1`
+- Seed account 3  `priority_min_players: 2`
+- Seed account 4  `priority_min_players: 3`
+- Seed account 5  `priority_min_players: 4`
