@@ -566,6 +566,7 @@ try:
 
                         if not name_present:
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
+                            print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()
                             current_server = None
 

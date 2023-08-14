@@ -1,12 +1,12 @@
 # Method ("endtime" or "minutes") to determine when to kill the game stop the script
 seeding_method: endtime
-seeding_endtime: 5:00 am
+seeding_endtime: 10:00 pm
 seeding_minutes: 720
 
 # Monitor priority servers when done or in perpetual mode.
 # Monitor helps if certain servers seed later than others
 priority_monitor: true
-priority_monitor_endtime: 6:00 pm
+priority_monitor_endtime: 10:00 pm
 # List of servers to seed
 # Configure servers to seed by "ip:port" or with keywords to find from the steam server list
 priority_servers: [
