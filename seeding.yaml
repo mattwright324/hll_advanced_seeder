@@ -1,89 +1,78 @@
-# On server query, the minimum player count to switch to the next server in the list
-# Technically 40 is seeded but better to stick around until its at least 50-60
-seeded_player_limit: 50
-# On server query, verify the server name contains a specified word
-# Sometimes servers change hosts, the IP is reused, and becomes a new/different server
-verify_name: true
-# How often to query the server player count in seconds
-server_query_rate: 15
-# How many seconds on server query before a timeout
-server_query_timeout: 10
+# Method ("endtime" or "minutes") to determine when to kill the game stop the script
+seeding_method: endtime
+seeding_endtime: 10:00 pm
+seeding_minutes: 720
 
-# Check if you've been kicked for idle by checking if your Steam display name is present on the server
-# Keep in mind, there is a rare possibility that someone else has the same name too
-# If your name is not present in the list, move on
-move_on_if_kicked: false
+# Monitor priority servers when done or in perpetual mode.
+# Monitor helps if certain servers seed later than others
+priority_monitor: true
+priority_monitor_endtime: 10:00 pm
+# List of servers to seed
+# Configure servers to seed by "ip:port" or with keywords to find from the steam server list
+priority_servers: [
+  # always tries to seed early
+  {steam_search: saucymuffin beer},
+  {steam_search: glow's east},
+  {steam_search: glow's west},
+  {steam_search: outpost bhb},
+  {steam_search: soulsniper},
+  # only seed/join if others are on trying and leave if they leave
+  {
+    steam_search: brewdawg east,
+    min_players: 3
+  },
+  {
+    steam_search: chad stuart flare,
+    min_players: 4
+  },
+  {
+    steam_search: rotn rangers,
+    min_players: 6
+  },
+  {
+    steam_search: brewdawg west,
+    min_players: 3
+  },
+]
+# Example (ip:port) with optional name verification
+# Find ip:port from the Steam Server Browser or from BattleMetrics
+# Verify checks the server name contains all words listed split by whitespace
+#  {
+#    about: Saucymuffin,
+#    address: 192.169.95.146:9075,
+#    verify: BEER
+#  }
+#
+# Example (keywords search) split by whitespace, server must contain all words.
+# If multiple servers match, ordered by most populated not already queued and must fit seeding criteria
+# Watch for conflicts with {ignore_name_contains} property
+#  {steam_search: foo east}        for example will match: "FOO Server :: US East - blah blah blah"
+
+
+# Max player count before moving to the next server
+# 40 is technically seeded though it's best to stick around to at least 50-60
+seeded_player_limit: 50
+# If you are running multiple seed scripts/accounts, randomly add 0-N to the limit to mitigate scripts moving on at the same time.
+seeded_player_variability: 5
+# Delay between server poll in seconds
+server_query_rate: 15
+# Server poll timeout in seconds
+server_query_timeout: 15
+# How many timeouts before moving on when monitoring a server
+query_timeout_limit: 6
+# Check if name is in the player list
+check_idle_kick: false
 player_name: SodiumEnglish
 
-# Moves on to the next server if the player pop drops by half the max it has observed.
-# Only kicks in if the max player pop has reached 9 or greater
-#     e.g. If you join a server at 40 pop and it drops to 20
-move_on_if_server_dead: true
 
-# When the script is done going through your {seeding_list}, perpetually search the Steam API for additional servers to seed
-# Searches for servers with player counts between {seeded_player_limit} and {perpetual_min_players}, whose max players is 100 (not Bob the Builder 64), and whose name does not contain "CN"
-# Servers are sorted and joined in order of most players first
-perpetual_seed_from_steam: false
+# Perpetually seed from the steam server list when done with priority servers
+# Help out the rest of the community!
+perpetual_mode: true
+# How many servers to queue for seeding (ordered from most to least populated)
+perpetual_max_servers: 2
+# Minimum players to consider seeding
 perpetual_min_players: 10
-# In perpetual mode, move on if the player count is less than {perpetual_min_players}-1
-perpetual_dead_if_empty: true
-# The maximum number of servers to queue from the server list
-# The more in the list, the more likely the ones at the bottom have been seeded or died
-perpetual_max_servers: 3
-# When searching for servers, ignore servers with the following in the name (case insensitive)
-perpetual_ignore_server_name_contains: [
-  cn,
-  event,
-  training,
-  hll official
-]
-
-# Method (options are "time" or "minutes") to determine when kill the game and stop the script
-#  "time" uses property {stop_seeding_time}
-#  "minutes" uses property {stop_seeding_minutes}
-# stop_seeding_method: time # planned option
-# Specific time
-stop_seeding_time: 10:00 pm
-# How long in minutes from script start
-# stop_seeding_minutes: 720 # planned option
-
-# List of servers to connect to and seed
-# Servers are queried with A2S / Valve Protocol
-# Use the Steam > View > Game Servers browser and copy the ip:port for the desired server(s)
-# {
-#   description: Short title
-#   connect: <ip>:<port>
-#   verify_name: keyword
-# }
-seeding_list: [
-  {
-    description: Saucymuffin,
-    connect: 192.169.95.146:9075,
-    verify_name: BEER
-  },
-  {
-    description: Glows East,
-    connect: 92.118.18.58:7792,
-    verify_name: Glow
-  },
-  {
-    description: Glows West,
-    connect: 104.238.222.122:7792,
-    verify_name: Glow
-  },
-  {
-    description: Outpost,
-    connect: 181.214.149.21:8772,
-    verify_name: BHB
-  },
-  {
-    description: SoulSniper,
-    connect: 192.169.95.2:8530,
-    verify_name: SOULSNIPER
-  },
-  {
-    description: Brew East,
-    connect: 192.169.86.218:9075,
-    verify_name: BrewDawg
-  }
+# Do not seed servers with these terms in the name (case-insensitive)
+ignore_name_contains: [
+  cn, event, training, hll official
 ]
