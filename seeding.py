@@ -51,7 +51,9 @@ seeding_method = str(seeding_yaml["seeding_method"]).lower()
 seeding_endtime = try_parsing_time(seeding_yaml["seeding_endtime"], "seeding_endtime")
 seeding_minutes = int(seeding_yaml["seeding_minutes"])
 priority_monitor = bool(seeding_yaml["priority_monitor"])
+priority_monitor_ranked = bool(seeding_yaml["priority_monitor_ranked"])
 priority_monitor_endtime = try_parsing_time(seeding_yaml["priority_monitor_endtime"], "priority_monitor_endtime")
+priority_min_players = int(seeding_yaml["priority_min_players"])
 servers = list(seeding_yaml["priority_servers"])
 seeded_player_limit = int(seeding_yaml["seeded_player_limit"])
 seeded_player_variability = int(seeding_yaml["seeded_player_variability"])
@@ -144,10 +146,19 @@ def get_priority_config(server_addr):
             return server["config"]
 
 
+def get_priority_rank(server_addr):
+    i = 0
+    for server in priority_servers:
+        if server_addr == server["server_addr"]:
+            return i
+        i += 1
+    return -1
+
+
 # server_addr   - (ip, port)
 # server_info   - {a2s_info}
 def should_server_queue(server_addr, server_info, min_players=0, name_ignore=None, verify_name=None,
-                        check_playercount=True):
+                        check_playercount=True, ignore_previous_joined=False):
     if verify_name is None:
         verify_name = []
     if name_ignore is None:
@@ -163,7 +174,7 @@ def should_server_queue(server_addr, server_info, min_players=0, name_ignore=Non
         queue = False
         reasons.append("Already queued")
     # Previously joined
-    if server_addr in previously_joined:
+    if server_addr in previously_joined and not ignore_previous_joined:
         queue = False
         reasons.append("Previously joined")
     # Only real 100 player servers. Not 64 player Bob the Builder
@@ -188,6 +199,8 @@ def should_server_queue(server_addr, server_info, min_players=0, name_ignore=Non
     if check_playercount and (server_info["players"] < min_players or server_info["players"] >= seeded_player_limit):
         queue = False
         reasons.append(f"Not in range [{min_players},{seeded_player_limit}]")
+
+    # debug(f"min={min_players} current={server_info['players']} max={seeded_player_limit}")
 
     return {"queue": queue, "reasons": reasons}
 
@@ -334,13 +347,20 @@ try:
         global next_server, current_server
 
         priority_server = None
-        if priority_monitor is True and not is_priority_server(current_server):
+        if priority_monitor is True:
+            current_rank = get_priority_rank(current_server)
             # typically less than a second for ~10 servers
-            priority_server = priority_server_check()
+            priority_server = priority_server_check(current_rank=current_rank)
 
-            if priority_server is not None and priority_server is not current_server:
+            new_rank = get_priority_rank(priority_server)
+
+            if (priority_server is not None and priority_server is not current_server or
+                    priority_monitor_ranked and current_rank != -1 and new_rank != -1 and new_rank < current_rank):
                 print()
-                print(f'{c.lightcyan}Priority server now seeding{c.reset}')
+                if current_rank != -1 and new_rank < current_rank:
+                    print(f'{nl()}{c.lightcyan}Higher priority server now seeding{c.reset}')
+                else:
+                    print(f'{nl()}{c.lightcyan}Priority server now seeding{c.reset}')
                 server_queue.insert(0, priority_server)
                 next_server = True
 
@@ -362,8 +382,12 @@ try:
 
 
     # Keep checking priority server states and switch to them when needed
-    def priority_server_check():
+    def priority_server_check(current_rank=-1):
+        i = 0
         for server in priority_servers:
+            if priority_monitor_ranked and current_rank != -1 and i >= current_rank:
+                # debug(f'{nl()}priority_server_check ranked break {i} < {current_rank}')
+                break
             server_addr = server["server_addr"]
             config = server["config"]
 
@@ -373,16 +397,27 @@ try:
                 server["info"] = latest_info
                 steam_servers[server_addr] = latest_info
 
-                min_players = 0
-                if "min_players" in config:
+                min_players = priority_min_players
+                if config is not None and "min_players" in config:
                     min_players = int(config["min_players"])
 
-                check = should_server_queue(server_addr, latest_info, min_players=min_players, check_playercount=True)
+                check = should_server_queue(server_addr, latest_info,
+                                            min_players=min_players,
+                                            check_playercount=True,
+                                            ignore_previous_joined=True)
+
+                # if priority_monitor_ranked and current_rank != -1:
+                #     debug(f'{nl()}rank checked {server_addr} rank #{i} / {current_rank}')
 
                 global current_server
                 if check["queue"] and server_addr not in server_queue and server_addr != current_server:
                     return server_addr
-            except:
+                i += 1
+            except Exception as err:
+                # debug(f"\n{c.red}Unexpected C {err=}, {type(err)=}{c.reset}")
+                # if debug_extra_logs:
+                #     traceback.print_exc()
+                i += 1
                 continue
         pass
 
@@ -441,7 +476,7 @@ try:
         threshold = int(players_max_count / 2)
         diff = players_max_count - current
         thresh_diff = players_max_count - threshold
-        dead_fraction = min(1.0, diff / thresh_diff)
+        dead_fraction = min(1, diff / max(1, thresh_diff))
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
         status_str = (f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
@@ -480,7 +515,8 @@ try:
             sw.start("seeding")
             player_threshold = seeded_player_limit + random.randrange(0, seeded_player_variability)
             player_threshold = min(player_threshold, info["max_players"])
-            server_type = "Priority" if is_priority_server(current_server) else "Perpetual"
+            rank = get_priority_rank(current_server)
+            server_type = f"Priority #{rank+1}" if is_priority_server(current_server) else "Perpetual"
             print()
             print(f'{nl()}{c.yellow}Monitoring Server ({server_type}){c.reset}')
             printed_progress = False
@@ -489,11 +525,13 @@ try:
 
             player_minimum = 0
             if is_priority_server(current_server):
+                player_minimum = priority_min_players
                 config = get_priority_config(current_server)
                 if config is not None and "min_players" in config:
                     player_minimum = int(config["min_players"])
             else:
                 player_minimum = perpetual_min_players
+            player_minimum = max(0, player_minimum)
 
             if not debug_no_game:
                 sw.start("idle_check")
@@ -587,6 +625,9 @@ try:
 
     print()
     print(f"{c.lightgreen}Seeding done!{c.reset}")
+
+    hll_game.kill()
+    hll_game.wait_until_dead()
 except Exception as err:
     traceback.print_exc()
     print(f"{nl()}{c.red}Unexpected A {err=}, {type(err)=}{c.reset}")

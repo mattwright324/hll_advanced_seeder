@@ -1,20 +1,26 @@
 # Method ("endtime" or "minutes") to determine when to kill the game stop the script
 seeding_method: endtime
-seeding_endtime: 10:00 pm
-seeding_minutes: 720
+seeding_endtime: 10:00 pm    # definitive stop time regardless of when the script started
+seeding_minutes: 720         # how many minutes after script start to stop
 
 # Monitor priority servers when done or in perpetual mode.
 # Monitor helps if certain servers seed later than others
 priority_monitor: true
 priority_monitor_endtime: 10:00 pm
+# Make the server list ranked from highest to lowest priority. If currently on a priority server and another priority server
+# above it meets seeding criteria, switch to that one instead.
+priority_monitor_ranked: true
+# Default minimum players to consider seeding
+# Can be modified on a server-by-server basis with a "min_players" option on a priority server
+priority_min_players: 2
 # List of servers to seed
 # Configure servers to seed by "ip:port" or with keywords to find from the steam server list
 priority_servers: [
   # always tries to seed early
   {steam_search: saucymuffin beer},
   {steam_search: glow's east},
-  {steam_search: glow's west},
   {steam_search: outpost bhb},
+  {steam_search: glow's west},
   {steam_search: soulsniper},
   # only seed/join if others are on trying and leave if they leave
   {
@@ -34,6 +40,11 @@ priority_servers: [
     min_players: 3
   },
 ]
+# Example (keywords search) split by whitespace, server must contain all words.
+# If multiple servers match, ordered by most populated not already queued and must fit seeding criteria
+# Watch for conflicts with {ignore_name_contains} property
+#  {steam_search: foo east}        for example will match: "FOO Server :: US East - blah blah blah"
+#
 # Example (ip:port) with optional name verification
 # Find ip:port from the Steam Server Browser or from BattleMetrics
 # Verify checks the server name contains all words listed split by whitespace
@@ -42,11 +53,6 @@ priority_servers: [
 #    address: 192.169.95.146:9075,
 #    verify: BEER
 #  }
-#
-# Example (keywords search) split by whitespace, server must contain all words.
-# If multiple servers match, ordered by most populated not already queued and must fit seeding criteria
-# Watch for conflicts with {ignore_name_contains} property
-#  {steam_search: foo east}        for example will match: "FOO Server :: US East - blah blah blah"
 
 
 # Max player count before moving to the next server
