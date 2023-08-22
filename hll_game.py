@@ -1,4 +1,5 @@
 import subprocess, time
+from steam import game_servers as gs
 
 # The EAC splash popup before the game is ready
 launch_exe = 'HLL_Launch.exe'
@@ -89,6 +90,19 @@ def wait_until_dead():
     # print(f"Dead - {time.time() - start}s")
     time.sleep(15)
     # print(f"Dead (+15s) - {time.time() - start}s")
+
+
+def is_player_present(server_addr, player_name, timeout=3):
+    try:
+        players = gs.a2s_players(server_addr, timeout=timeout)
+
+        names = []
+        for player in players:
+            names.append(player["name"])
+
+        return player_name.lower() in (string.lower() for string in names)
+    except:
+        return None
 
 
 def launch_and_wait():

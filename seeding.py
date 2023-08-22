@@ -7,7 +7,7 @@ import colors as c, hll_game, stopwatches as sw
 
 # Don't launch the game, join servers, or check their player lists
 # Otherwise, operates as if it did those things for testing
-debug_no_game = False
+debug_no_game = True
 # Print extra logs in a few places
 debug_extra_logs = False
 
@@ -334,6 +334,7 @@ try:
     sw.start("seeding")
     server_type = None
     timeouts = 0
+    check_dying = True
 
     player_threshold = seeded_player_limit
     player_minimum = 0
@@ -480,12 +481,12 @@ try:
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
         status_str = (f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
-                      f'  {c.green}{int(fraction * 100)}{c.reset}%')
-        elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}'
-        dying_str = f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}'
-        timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}'
+                      f'  {c.green}{int(fraction * 100)}{c.reset}%  ')
+        elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}  '
+        dying_str = "" if not check_dying else f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}  '
+        timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}  '
 
-        value = f'Seed progress {progress_bar}  {status_str}  {elapsed_str}  {dying_str}  {timeout_str}  '
+        value = f'Seed progress {progress_bar}  {status_str}{elapsed_str}{dying_str}{timeout_str}'
         print("\r{0}".format(value), end='')
         global printed_progress
         printed_progress = True
@@ -513,15 +514,15 @@ try:
             players_max_count = 0
             timeouts = 0
             sw.start("seeding")
+            is_priority = is_priority_server(current_server)
             player_threshold = seeded_player_limit + random.randrange(0, seeded_player_variability)
             player_threshold = min(player_threshold, info["max_players"])
             rank = get_priority_rank(current_server)
-            server_type = f"Priority #{rank+1}" if is_priority_server(current_server) else "Perpetual"
+            server_type = f"Priority #{rank+1}" if is_priority else "Perpetual"
             print()
             print(f'{nl()}{c.yellow}Monitoring Server ({server_type}){c.reset}')
             printed_progress = False
             print(f'{c.darkgrey}{info["name"]}{c.reset}')
-            print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
 
             player_minimum = 0
             if is_priority_server(current_server):
@@ -533,10 +534,28 @@ try:
                 player_minimum = perpetual_min_players
             player_minimum = max(0, player_minimum)
 
+            # priority servers with monitor is on will re-queue in a loop, no point in checking dying.
+            check_dying = (not is_priority) or (is_priority and not priority_monitor)
+
+            print(f'Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
             if not debug_no_game:
                 sw.start("idle_check")
                 hll_game.join_server_addr(current_server)
                 time.sleep(15)
+                if check_idle_kick:
+                    sw.start("join-retry")
+                    # rarely it doesn't join on the first attempt, try a couple more times
+                    while True:
+                        if sw.seconds("join-retry") > 50:
+                            break
+
+                        check = hll_game.is_player_present(current_server, player_name)
+                        if check is False:
+                            debug(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
+                            hll_game.join_server_addr(current_server)
+                            time.sleep(9)
+                        time.sleep(1)
+
 
         if dt.today() >= stop_datetime:
             print()
@@ -577,7 +596,7 @@ try:
             elif players < player_minimum and not is_priority_server(current_server):
                 print(f'{nl()}{c.orange}Perpetual server below {player_minimum} players{c.reset}')
                 current_server = None
-            elif players_max_count > player_minimum and players <= players_max_count / 2:
+            elif check_dying and players_max_count > player_minimum and players <= players_max_count / 2:
                 print(f'{nl()}{c.orange}Player count halved, server likely dying{c.reset}')
                 current_server = None
 
