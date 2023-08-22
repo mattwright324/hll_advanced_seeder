@@ -554,6 +554,8 @@ try:
                             debug(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
                             hll_game.join_server_addr(current_server)
                             time.sleep(9)
+                        elif check is True:
+                            break
                         time.sleep(1)
 
 
