@@ -7,7 +7,7 @@ import colors as c, hll_game, stopwatches as sw
 
 # Don't launch the game, join servers, or check their player lists
 # Otherwise, operates as if it did those things for testing
-debug_no_game = True
+debug_no_game = False
 # Print extra logs in a few places
 debug_extra_logs = False
 
