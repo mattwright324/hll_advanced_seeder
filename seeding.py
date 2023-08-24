@@ -591,24 +591,25 @@ try:
                 hll_game.join_server_addr(current_server)
                 time.sleep(30)
                 if check_idle_kick:
-                    sw.start("join-retry")
+                    join_retry = 0
                     # rarely it doesn't join on the first attempt, try a couple more times
                     while True:
-                        if sw.seconds("join-retry") > 240:
-                            debug(f"join-retry failed too long {sw.seconds('join-retry')}")
+                        time.sleep(1)
+                        join_retry += 1
+                        if join_retry > 3:
+                            debug(f"join-retry failed too long {sw.seconds('idle_check')}")
                             break
 
                         check = hll_game.is_player_present(current_server, player_name)
                         if check is False:
-                            print(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
+                            print(f"Connecting {c.lightblue}{str(current_server).ljust(27)} Retry #{join_retry} {sw.seconds('join-retry')}s")
                             hll_game.join_server_addr(current_server)
-                            time.sleep(29)
+                            time.sleep(30 + (join_retry * 10))
                         elif check is True:
                             debug(f"Player present {sw.seconds('join-retry')}")
                             break
-                        time.sleep(1)
                 if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
-                    screenshot(f"New server {player_name} not connected")
+                    screenshot(f"New server failed join")
 
         if dt.today() >= stop_datetime:
             print()
@@ -656,7 +657,7 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     if debug_screenshots:
-                        screenshot(f"Game crashed []")
+                        screenshot(f"Game crashed")
 
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
