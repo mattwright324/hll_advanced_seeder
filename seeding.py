@@ -594,7 +594,7 @@ try:
                     sw.start("join-retry")
                     # rarely it doesn't join on the first attempt, try a couple more times
                     while True:
-                        if sw.seconds("join-retry") > 50:
+                        if sw.seconds("join-retry") > 240:
                             debug(f"join-retry failed too long {sw.seconds('join-retry')}")
                             break
 
