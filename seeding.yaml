@@ -1,36 +1,43 @@
-# Method ("endtime" or "minutes") to determine when to kill the game stop the script
-seeding_method: endtime
-seeding_endtime: 10:00 pm    # definitive stop time regardless of when the script started
-seeding_minutes: 720         # how many minutes after script start to stop
+# General settings for script runtime
+seeding:
+  method: endtime    # "endtime" or "minutes" to determine when to kill the game stop the script
+  endtime: 10:00 pm  # definitive stop time regardless of when the script started
+  minutes: 720       # how many minutes after script start to stop
 
-# Monitor priority servers when done or in perpetual mode.
-# Monitor helps if certain servers seed later than others
-priority_monitor: true
-priority_monitor_endtime: 10:00 pm
-# Make the server list ranked from highest to lowest priority. If currently on a priority server and another priority server
-# above it meets seeding criteria, switch to that one instead.
-priority_monitor_ranked: true
-# Default minimum players to consider seeding
-# Can be modified on a server-by-server basis with a "min_players" option on a priority server.
-# 0 - start the seed and wait indefinitely
-# 2 or more - only help out if others are on and trying
-priority_min_players: 2
-# List of servers to seed
-# Configure servers to seed by "ip:port" or with keywords to find from the steam server list
-priority_servers: [
-  # top priority if we're actually trying (haven't for a while), otherwise help servers below it
-  {steam_search: brewdawg east, min_players: 2},
-  # always tries to seed early
-  {steam_search: saucymuffin beer},
-  {steam_search: glow's east},
-  {steam_search: outpost bhb},
-  {steam_search: glow's west},
-  {steam_search: soulsniper},
-  # only seed/join if others are on trying and leave if they leave
-  {steam_search: chad stuart flare, min_players: 4},
-  {steam_search: rotn rangers, min_players: 6},
-  {steam_search: brewdawg west, min_players: 3},
-]
+
+# Settings for configuring specific servers to seed and how/when to seed them
+priority:
+  # Monitor priority servers when done or in perpetual mode.
+  # Monitor helps if certain servers seed later than others
+  monitor_enabled: true
+  monitor_endtime: 10:00 pm
+  # Make the server list ranked from highest to lowest priority. If currently on a priority server and another priority server
+  # above it meets seeding criteria, switch to that one instead.
+  monitor_ranked: true
+
+  # Default minimum players to consider seeding
+  # Can be modified on a server-by-server basis with a "min_players" option on a priority server.
+  # 0 - start the seed and wait indefinitely
+  # 2 or more - only help out if others are on and trying
+  min_players: 2
+
+  # List of servers to seed
+  # Configure servers to seed by "ip:port" or with keywords to find from the steam server list
+  servers: [
+    # top priority if we're actually trying (haven't for a while), otherwise help servers below it
+    { steam_search: brewdawg east, min_players: 2 },
+    # always tries to seed early
+    { steam_search: saucymuffin beer },
+    { steam_search: glow's east },
+    { steam_search: outpost bhb },
+    { steam_search: glow's west },
+    { steam_search: soulsniper },
+    # only seed/join if others are on trying and leave if they leave
+    { steam_search: chad stuart flare, min_players: 4 },
+    { steam_search: rotn rangers, min_players: 6 },
+    { steam_search: brewdawg west, min_players: 3 },
+  ]
+
 # Example (keywords search) split by whitespace, server must contain all words.
 # If multiple servers match, ordered by most populated not already queued and must fit seeding criteria
 # Watch for conflicts with {ignore_name_contains} property
@@ -62,14 +69,26 @@ check_idle_kick: false
 player_name: SodiumEnglish
 
 
-# Perpetually seed from the steam server list when done with priority servers
+# When out of servers, search the steam server list for more seeding servers
 # Help out the rest of the community!
-perpetual_mode: true
-# How many servers to queue for seeding (ordered from most to least populated)
-perpetual_max_servers: 2
-# Minimum players to consider seeding
-perpetual_min_players: 10
-# Do not seed servers with these terms in the name (case-insensitive)
-ignore_name_contains: [
-  cn, event, training, hll official
-]
+perpetual_mode:
+  enabled: true
+  # How many servers to queue for seeding (ordered from most to least populated)
+  # Only applies when priority monitor is disabled otherwise is 1
+  max_servers: 2
+  # Minimum players to consider seeding
+  min_players: 10
+  # Do not seed servers with these terms in the name (case-insensitive)
+  ignore_name_contains: [
+    cn, event, training, hll official
+  ]
+
+
+# options that help with script development/debugging
+debug:
+  # do not launch/join servers but operate almost as if it did
+  no_game: false
+  # log extra details to help debug
+  extra_logs: false
+  # on game crash or idle/disconnect, focus windows and takes a screenshot before closing applications
+  screenshots: true

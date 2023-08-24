@@ -1,20 +1,11 @@
 # required
-import sys, yaml, time, traceback, random
+import os, sys, yaml, time, traceback, random
 from datetime import datetime as dt, timedelta
 from steam import game_servers as gs
+# debug screenshot
+import pyautogui, win32con, win32gui, pywinauto as pwa
 # project required
 import colors as c, hll_game, stopwatches as sw
-
-# Don't launch the game, join servers, or check their player lists
-# Otherwise, operates as if it did those things for testing
-debug_no_game = False
-# Print extra logs in a few places
-debug_extra_logs = False
-
-
-def debug(log):
-    if debug_extra_logs:
-        print(f'{c.darkgrey}DEBUG : {log}{c.reset}')
 
 
 def try_parsing_time(possible_date, field):
@@ -37,24 +28,72 @@ def split_whitespace(string):
     return keywords
 
 
+def window_safe_focus(process_title):
+    try:
+        win_handle = pwa.findwindows.find_window(title_re=f".*{process_title}.*")
+        tup = win32gui.GetWindowPlacement(win_handle)
+        if tup[1] != win32con.SW_SHOWMINIMIZED:
+            win32gui.ShowWindow(win_handle, win32con.SW_MINIMIZE)
+        win32gui.ShowWindow(win_handle, win32con.SW_RESTORE)
+    except:
+        pass
+    time.sleep(2)
+
+
+def screenshot(detail):
+    debug(f'Screenshot {detail}')
+    if not os.path.exists("screenshots"):
+        os.makedirs("screenshots")
+
+    # focus game or crash window to top
+    if hll_game.is_running():
+        window_safe_focus("Hell Let Loose")
+    elif hll_game.did_game_crash():
+        window_safe_focus("Unreal Engine 4 Crash Reporter")
+
+    timestamp = dt.now().strftime('%Y%m%d-%H%M%S')
+    screenshot = pyautogui.screenshot()
+    screenshot.save(f"screenshots/{timestamp} - {detail}.png")
+
+    # bring seed script back to top
+    window_safe_focus("hll_seeding_script")
+
+
 print(f'{c.yellow}   ###############################   {c.reset}')
 print(f'{c.yellow}   ###   HLL Advanced Seeder   ###   {c.reset}')
 print(f'{c.yellow}   ###############################   {c.reset}')
 print()
 
-debug('Loading YAML')
 with open('seeding.yaml', 'r') as file:
     seeding_yaml = yaml.safe_load(file)
-debug(f'{c.darkgrey}{seeding_yaml}{c.reset}\n')
 
-seeding_method = str(seeding_yaml["seeding_method"]).lower()
-seeding_endtime = try_parsing_time(seeding_yaml["seeding_endtime"], "seeding_endtime")
-seeding_minutes = int(seeding_yaml["seeding_minutes"])
-priority_monitor = bool(seeding_yaml["priority_monitor"])
-priority_monitor_ranked = bool(seeding_yaml["priority_monitor_ranked"])
-priority_monitor_endtime = try_parsing_time(seeding_yaml["priority_monitor_endtime"], "priority_monitor_endtime")
-priority_min_players = int(seeding_yaml["priority_min_players"])
-servers = list(seeding_yaml["priority_servers"])
+debug = seeding_yaml["debug"]
+debug_extra_logs = bool(debug["extra_logs"])
+debug_no_game = bool(debug["no_game"])
+debug_screenshots = bool(debug["screenshots"])
+
+
+def debug(log):
+    if debug_extra_logs:
+        print(f'{c.darkgrey}DEBUG : {log}{c.reset}')
+
+
+if debug_extra_logs:
+    debug(f'{c.darkgrey}Loaded YAML{c.reset}')
+    debug(f'{c.darkgrey}{seeding_yaml}{c.reset}\n')
+
+seeding = seeding_yaml["seeding"]
+seeding_method = str(seeding["method"]).lower()
+seeding_endtime = try_parsing_time(seeding["endtime"], "seeding.endtime")
+seeding_minutes = int(seeding["minutes"])
+
+priority = seeding_yaml["priority"]
+priority_monitor = bool(priority["monitor_enabled"])
+priority_monitor_ranked = bool(priority["monitor_ranked"])
+priority_monitor_endtime = try_parsing_time(priority["monitor_endtime"], "priority.monitor_endtime")
+priority_min_players = int(priority["min_players"])
+servers = list(priority["servers"])
+
 seeded_player_limit = int(seeding_yaml["seeded_player_limit"])
 seeded_player_variability = int(seeding_yaml["seeded_player_variability"])
 server_query_rate = int(seeding_yaml["server_query_rate"])
@@ -62,10 +101,12 @@ server_query_timeout = int(seeding_yaml["server_query_timeout"])
 query_timeout_limit = int(seeding_yaml["query_timeout_limit"])
 check_idle_kick = bool(seeding_yaml["check_idle_kick"])
 player_name = seeding_yaml["player_name"]
-perpetual_mode = bool(seeding_yaml["perpetual_mode"])
-perpetual_max_servers = int(seeding_yaml["perpetual_max_servers"])
-perpetual_min_players = int(seeding_yaml["perpetual_min_players"])
-ignore_name_contains = list(seeding_yaml["ignore_name_contains"])
+
+perpetual = seeding_yaml["perpetual_mode"]
+perpetual_enabled = bool(perpetual["enabled"])
+perpetual_max_servers = int(perpetual["max_servers"])
+perpetual_min_players = int(perpetual["min_players"])
+ignore_name_contains = list(perpetual["ignore_name_contains"])
 
 start_datetime = dt.today()
 stop_datetime = start_datetime
@@ -84,8 +125,9 @@ else:
 plan_runtime = (stop_datetime - start_datetime).total_seconds()
 plan_runtime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_runtime))
 
-stop_priority_datetime = start_datetime.replace(hour=priority_monitor_endtime.hour, minute=priority_monitor_endtime.minute, second=0,
-                                           microsecond=0)
+stop_priority_datetime = start_datetime.replace(hour=priority_monitor_endtime.hour,
+                                                minute=priority_monitor_endtime.minute, second=0,
+                                                microsecond=0)
 if stop_priority_datetime < start_datetime:
     stop_priority_datetime += timedelta(days=1)
 
@@ -95,15 +137,17 @@ plan_prioritytime_str = time.strftime("%Hh %Mm %Ss", time.gmtime(plan_priorityti
 print(f'{c.yellow}Summary{c.reset}')
 print(f'Run method        : {c.lightblue}{seeding_method}{c.reset} or when done')
 print(f'Start time        : {c.lightblue}{start_datetime}{c.reset}')
-print(f'Plan end time     : {c.lightblue}{stop_datetime}{c.reset} or {c.darkgrey}{plan_runtime_str} from start{c.reset}')
-print(f'Perpetual mode    : {c.green if perpetual_mode else c.darkgrey}{perpetual_mode}{c.reset}')
+print(
+    f'Plan end time     : {c.lightblue}{stop_datetime}{c.reset} or {c.darkgrey}{plan_runtime_str} from start{c.reset}')
+print(f'Perpetual mode    : {c.green if perpetual_enabled else c.darkgrey}{perpetual_enabled}{c.reset}')
 print(f'Priority monitor  : {c.green if priority_monitor else c.darkgrey}{priority_monitor}{c.reset}')
 if priority_monitor:
-    print(f'Priority end time : {c.lightblue}{stop_priority_datetime}{c.reset} or {c.darkgrey}{plan_prioritytime_str} from start{c.reset}')
+    print(
+        f'Priority end time : {c.lightblue}{stop_priority_datetime}{c.reset} or {c.darkgrey}{plan_prioritytime_str} from start{c.reset}')
 print(f'Servers listed    : {c.lightblue}{len(servers)}{c.reset}')
 print()
 
-do_steam_search = perpetual_mode
+do_steam_search = perpetual_enabled
 for server in servers:
     if "steam_search" in server.keys():
         do_steam_search = True
@@ -314,6 +358,7 @@ print()
 
 printed_progress = False
 
+window_safe_focus("hll_seeding_script")
 
 # Prefix for print() statements
 def nl():
@@ -326,6 +371,9 @@ def nl():
 try:
     print(f'{c.yellow}Starting seeding process{c.reset}')
     print()
+
+    if debug_screenshots:
+        screenshot("Startup")
 
     search_for_next = False
     next_server = True
@@ -365,7 +413,7 @@ try:
                 server_queue.insert(0, priority_server)
                 next_server = True
 
-        if current_server is None and len(server_queue) == 0 and perpetual_mode and priority_server is None:
+        if current_server is None and len(server_queue) == 0 and perpetual_enabled and priority_server is None:
             max = perpetual_max_servers
             if priority_monitor:
                 max = 1
@@ -480,8 +528,9 @@ try:
         dead_fraction = min(1, diff / max(1, thresh_diff))
 
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
-        status_str = (f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
-                      f'  {c.green}{int(fraction * 100)}{c.reset}%  ')
+        status_str = (
+            f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
+            f'  {c.green}{int(fraction * 100)}{c.reset}%  ')
         elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}  '
         dying_str = "" if not check_dying else f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}  '
         timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}  '
@@ -494,7 +543,7 @@ try:
 
     while True:
         time.sleep(1)
-        if next_server and len(server_queue) == 0 and not priority_monitor and not perpetual_mode:
+        if next_server and len(server_queue) == 0 and not priority_monitor and not perpetual_enabled:
             print()
             print(f'Ran out of servers.')
             # no servers and no ongoing processes, script done
@@ -518,7 +567,7 @@ try:
             player_threshold = seeded_player_limit + random.randrange(0, seeded_player_variability)
             player_threshold = min(player_threshold, info["max_players"])
             rank = get_priority_rank(current_server)
-            server_type = f"Priority #{rank+1}" if is_priority else "Perpetual"
+            server_type = f"Priority #{rank + 1}" if is_priority else "Perpetual"
             print()
             print(f'{nl()}{c.yellow}Monitoring Server ({server_type}){c.reset}')
             printed_progress = False
@@ -547,6 +596,7 @@ try:
                     # rarely it doesn't join on the first attempt, try a couple more times
                     while True:
                         if sw.seconds("join-retry") > 50:
+                            debug(f"join-retry failed too long {sw.seconds('join-retry')}")
                             break
 
                         check = hll_game.is_player_present(current_server, player_name)
@@ -555,9 +605,11 @@ try:
                             hll_game.join_server_addr(current_server)
                             time.sleep(9)
                         elif check is True:
+                            debug(f"Player present {sw.seconds('join-retry')}")
                             break
                         time.sleep(1)
-
+                if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
+                    screenshot(f"New server {player_name} not connected")
 
         if dt.today() >= stop_datetime:
             print()
@@ -590,6 +642,8 @@ try:
             seed_progress(players)
 
             if players >= player_threshold:
+                if debug_screenshots:
+                    screenshot("Seeded!")
                 print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
                 current_server = None
             elif is_priority_server(current_server) and players < player_minimum:
@@ -604,7 +658,23 @@ try:
 
             if not debug_no_game:
                 if hll_game.did_game_crash():
+                    if debug_screenshots:
+                        screenshot("Game crashed")
+
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
+                    print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
+                    hll_game.relaunch_and_wait()
+
+                    if current_server is not None:
+                        print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
+                        hll_game.join_server_addr(current_server)
+                        time.sleep(15)
+
+                elif hll_game.is_fully_dead():
+                    if debug_screenshots:
+                        screenshot("Game closed")
+
+                    print(f'{nl()}{c.red}Game closed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                     hll_game.relaunch_and_wait()
 
@@ -624,6 +694,8 @@ try:
                         name_present = player_name.lower() in (string.lower() for string in names)
 
                         if not name_present:
+                            if debug_screenshots:
+                                screenshot("Not in player list")
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
                             print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()

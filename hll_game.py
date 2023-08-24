@@ -34,6 +34,11 @@ def is_fully_running():
             and __process_exists(overlay_exe) and __process_exists(crash_window_exe))
 
 
+def is_fully_dead():
+    return not (is_running() or __process_exists(bugreport_exe)
+                or __process_exists(overlay_exe) or __process_exists(crash_window_exe))
+
+
 def kill():
     if is_running():
         __process_kill(hll_exe)
@@ -115,4 +120,3 @@ def relaunch_and_wait():
     kill_crash_window()
     wait_until_dead()
     launch_and_wait()
-
