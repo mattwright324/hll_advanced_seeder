@@ -602,11 +602,11 @@ try:
 
                         check = hll_game.is_player_present(current_server, player_name)
                         if check is False:
-                            print(f"Connecting {c.lightblue}{str(current_server).ljust(27)} Retry #{join_retry} {sw.seconds('join-retry')}s")
+                            print(f"Connecting {c.lightblue}{str(current_server).ljust(27)}{c.reset} Retry #{join_retry} {sw.seconds('idle_check')}s")
                             hll_game.join_server_addr(current_server)
                             time.sleep(30 + (join_retry * 10))
                         elif check is True:
-                            debug(f"Player present {sw.seconds('join-retry')}")
+                            debug(f"Player present {sw.seconds('idle_check')}")
                             break
                 if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
                     screenshot(f"New server failed join")
