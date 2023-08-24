@@ -589,7 +589,7 @@ try:
             if not debug_no_game:
                 sw.start("idle_check")
                 hll_game.join_server_addr(current_server)
-                time.sleep(15)
+                time.sleep(30)
                 if check_idle_kick:
                     sw.start("join-retry")
                     # rarely it doesn't join on the first attempt, try a couple more times
@@ -602,7 +602,7 @@ try:
                         if check is False:
                             print(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
                             hll_game.join_server_addr(current_server)
-                            time.sleep(9)
+                            time.sleep(29)
                         elif check is True:
                             debug(f"Player present {sw.seconds('join-retry')}")
                             break
