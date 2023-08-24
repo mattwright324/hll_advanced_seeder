@@ -4,6 +4,7 @@ from datetime import datetime as dt, timedelta
 from steam import game_servers as gs
 # debug screenshot
 import pyautogui, win32con, win32gui, pywinauto as pwa
+from sanitize_filename import sanitize
 # project required
 import colors as c, hll_game, stopwatches as sw
 
@@ -28,11 +29,11 @@ def split_whitespace(string):
     return keywords
 
 
-def window_safe_focus(process_title):
+def window_safe_focus(process_title, minimize=True):
     try:
         win_handle = pwa.findwindows.find_window(title_re=f".*{process_title}.*")
         tup = win32gui.GetWindowPlacement(win_handle)
-        if tup[1] != win32con.SW_SHOWMINIMIZED:
+        if minimize and tup[1] != win32con.SW_SHOWMINIMIZED:
             win32gui.ShowWindow(win_handle, win32con.SW_MINIMIZE)
         win32gui.ShowWindow(win_handle, win32con.SW_RESTORE)
     except:
@@ -53,7 +54,8 @@ def screenshot(detail):
 
     timestamp = dt.now().strftime('%Y%m%d-%H%M%S')
     screenshot = pyautogui.screenshot()
-    screenshot.save(f"screenshots/{timestamp} - {detail}.png")
+    filename = sanitize(f"{timestamp} - {detail} - {latest_info['name'][0:20]}.png")
+    screenshot.save(f"screenshots/{filename}")
 
     # bring seed script back to top
     window_safe_focus("hll_seeding_script")
@@ -372,9 +374,6 @@ try:
     print(f'{c.yellow}Starting seeding process{c.reset}')
     print()
 
-    if debug_screenshots:
-        screenshot("Startup")
-
     search_for_next = False
     next_server = True
     current_server = None
@@ -601,7 +600,7 @@ try:
 
                         check = hll_game.is_player_present(current_server, player_name)
                         if check is False:
-                            debug(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
+                            print(f"Connecting retry {str(current_server).ljust(27)} {sw.seconds('join-retry')}s")
                             hll_game.join_server_addr(current_server)
                             time.sleep(9)
                         elif check is True:
@@ -642,8 +641,6 @@ try:
             seed_progress(players)
 
             if players >= player_threshold:
-                if debug_screenshots:
-                    screenshot("Seeded!")
                 print(f'{nl()}{c.lightgreen}Seeded!{c.reset}')
                 current_server = None
             elif is_priority_server(current_server) and players < player_minimum:
@@ -659,7 +656,7 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     if debug_screenshots:
-                        screenshot("Game crashed")
+                        screenshot(f"Game crashed []")
 
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -672,7 +669,7 @@ try:
 
                 elif hll_game.is_fully_dead():
                     if debug_screenshots:
-                        screenshot("Game closed")
+                        screenshot(f"Game closed")
 
                     print(f'{nl()}{c.red}Game closed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -695,7 +692,7 @@ try:
 
                         if not name_present:
                             if debug_screenshots:
-                                screenshot("Not in player list")
+                                screenshot(f"Not in player list")
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
                             print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()

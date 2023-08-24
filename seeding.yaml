@@ -25,7 +25,7 @@ priority:
   # Configure servers to seed by "ip:port" or with keywords to find from the steam server list
   servers: [
     # top priority if we're actually trying (haven't for a while), otherwise help servers below it
-    { steam_search: brewdawg east, min_players: 2 },
+    { steam_search: brewdawg east, min_players: 3 },
     # always tries to seed early
     { steam_search: saucymuffin beer },
     { steam_search: glow's east },
@@ -33,7 +33,7 @@ priority:
     { steam_search: glow's west },
     { steam_search: soulsniper },
     # only seed/join if others are on trying and leave if they leave
-    { steam_search: chad stuart flare, min_players: 4 },
+    { steam_search: chad stuart flare, min_players: 8 },
     { steam_search: rotn rangers, min_players: 6 },
     { steam_search: brewdawg west, min_players: 3 },
   ]

@@ -8,3 +8,4 @@ steam[client]
 pyautogui
 pywinauto
 pywin32
+sanitize_filename
