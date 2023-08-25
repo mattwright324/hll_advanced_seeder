@@ -48,7 +48,7 @@ def screenshot(detail):
 
     # focus game or crash window to top
     if hll_game.is_running():
-        window_safe_focus("Hell Let Loose")
+        window_safe_focus("Hell Let Loose", minimize=False)
     elif hll_game.did_game_crash():
         window_safe_focus("Unreal Engine 4 Crash Reporter")
 
