@@ -42,7 +42,7 @@ def window_safe_focus(process_title, minimize=True):
     time.sleep(2)
 
 
-def screenshot(detail):
+def screenshot(detail, server_info):
     debug(f'Screenshot {detail}')
     if not os.path.exists("screenshots"):
         os.makedirs("screenshots")
@@ -53,9 +53,11 @@ def screenshot(detail):
     elif hll_game.did_game_crash():
         window_safe_focus("Unreal Engine 4 Crash Reporter")
 
+    detail_server = "" if server_info is None else f" - {latest_info['name'][0:30]}"
+
     timestamp = dt.now().strftime('%Y%m%d-%H%M%S')
     screenshot = pyautogui.screenshot()
-    filename = sanitize(f"{timestamp} - {detail} - {latest_info['name'][0:20]}.png")
+    filename = sanitize(f"{timestamp} - {detail}{detail_server}.png")
     screenshot.save(f"screenshots/{filename}")
 
     # bring seed script back to top
@@ -107,6 +109,7 @@ player_name = seeding_yaml["player_name"]
 
 perpetual = seeding_yaml["perpetual_mode"]
 perpetual_enabled = bool(perpetual["enabled"])
+perpetual_choose_method = str(perpetual["choose_method"])
 perpetual_max_servers = int(perpetual["max_servers"])
 perpetual_min_players = int(perpetual["min_players"])
 ignore_name_contains = list(perpetual["ignore_name_contains"])
@@ -496,7 +499,14 @@ try:
                     potential_add.append((info["players"], server_addr))
             except:
                 continue
-        potential_add.sort(key=lambda a: a[0], reverse=True)
+
+        if perpetual_choose_method.lower() == "random":
+            random.shuffle(potential_add)
+        elif perpetual_choose_method.lower() == "least_populated":
+            potential_add.sort(key=lambda a: a[0], reverse=False)
+        else:
+            # most_populated
+            potential_add.sort(key=lambda a: a[0], reverse=True)
 
         debug(f'{c.darkgrey}{early_ignored} servers early ignored{c.reset}')
 
@@ -610,7 +620,7 @@ try:
                             debug(f"Player present {sw.seconds('idle_check')}")
                             break
                 if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
-                    screenshot(f"New server failed join")
+                    screenshot(f"New server failed join", latest_info)
 
         if dt.today() >= stop_datetime:
             print()
@@ -658,7 +668,7 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     if debug_screenshots:
-                        screenshot(f"Game crashed")
+                        screenshot(f"Game crashed", latest_info)
 
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -671,7 +681,7 @@ try:
 
                 elif hll_game.is_fully_dead():
                     if debug_screenshots:
-                        screenshot(f"Game closed")
+                        screenshot(f"Game closed", latest_info)
 
                     print(f'{nl()}{c.red}Game closed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -694,7 +704,7 @@ try:
 
                         if not name_present:
                             if debug_screenshots:
-                                screenshot(f"Not in player list")
+                                screenshot(f"Not in player list", latest_info)
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
                             print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()

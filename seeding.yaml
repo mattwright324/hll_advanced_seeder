@@ -73,6 +73,9 @@ player_name: SodiumEnglish
 # Help out the rest of the community!
 perpetual_mode:
   enabled: true
+  # How to pick the servers to queue assuming a list of servers match seeding criteria
+  # Options: most_populated (default), least_populated, random
+  choose_method: most_populated
   # How many servers to queue for seeding (ordered from most to least populated)
   # Only applies when priority monitor is disabled otherwise is 1
   max_servers: 2
