@@ -35,6 +35,7 @@ def window_safe_focus(process_title, minimize=True):
         tup = win32gui.GetWindowPlacement(win_handle)
         if minimize and tup[1] != win32con.SW_SHOWMINIMIZED:
             win32gui.ShowWindow(win_handle, win32con.SW_MINIMIZE)
+            time.sleep(1)
         win32gui.ShowWindow(win_handle, win32con.SW_RESTORE)
     except:
         pass
@@ -48,7 +49,7 @@ def screenshot(detail):
 
     # focus game or crash window to top
     if hll_game.is_running():
-        window_safe_focus("Hell Let Loose", minimize=False)
+        window_safe_focus("Hell Let Loose")
     elif hll_game.did_game_crash():
         window_safe_focus("Unreal Engine 4 Crash Reporter")
 
