@@ -620,7 +620,7 @@ try:
                             debug(f"Player present {sw.seconds('idle_check')}")
                             break
                 if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
-                    screenshot(f"New server failed join", latest_info)
+                    screenshot(f"New server failed join", steam_servers[current_server])
 
         if dt.today() >= stop_datetime:
             print()
@@ -668,7 +668,7 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     if debug_screenshots:
-                        screenshot(f"Game crashed", latest_info)
+                        screenshot(f"Game crashed", steam_servers[current_server])
 
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -681,7 +681,7 @@ try:
 
                 elif hll_game.is_fully_dead():
                     if debug_screenshots:
-                        screenshot(f"Game closed", latest_info)
+                        screenshot(f"Game closed", steam_servers[current_server])
 
                     print(f'{nl()}{c.red}Game closed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -704,7 +704,7 @@ try:
 
                         if not name_present:
                             if debug_screenshots:
-                                screenshot(f"Not in player list", latest_info)
+                                screenshot(f"Not in player list", steam_servers[current_server])
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
                             print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()
