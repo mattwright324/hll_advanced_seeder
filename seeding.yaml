@@ -83,13 +83,16 @@ perpetual_mode:
   min_players: 10
   # Do not seed servers with these terms in the name (case-insensitive)
   ignore_name_contains: [
-    cn, event, training, hll official
+    cn, violet, # chinese
+    event, training, test, # real servers only
+    hll official, # community servers only
+    fr only, french # will be banned unless you are actually french (they check steam profile country)
   ]
 
 
 # options that help with script development/debugging
 debug:
-  # do not launch/join servers but operate almost as if it did
+  # do not launch game or join servers but operate almost as if it did
   no_game: false
   # log extra details to help debug
   extra_logs: false
