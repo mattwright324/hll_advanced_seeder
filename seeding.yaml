@@ -34,7 +34,7 @@ priority:
     { steam_search: soulsniper },
     # only seed/join if others are on trying and leave if they leave
     { steam_search: chad stuart flare, min_players: 8 },
-    { steam_search: rotn rangers, min_players: 6 },
+    { steam_search: rotn rangers, min_players: 8 },
     { steam_search: brewdawg west, min_players: 3 },
   ]
 
@@ -42,6 +42,7 @@ priority:
 # If multiple servers match, ordered by most populated not already queued and must fit seeding criteria
 # Watch for conflicts with {ignore_name_contains} property
 #  {steam_search: foo east}        for example will match: "FOO Server :: US East - blah blah blah"
+#  {steam_search: foo east, min_players: 6}
 #
 # Example (ip:port) with optional name verification
 # Find ip:port from the Steam Server Browser or from BattleMetrics
@@ -80,7 +81,7 @@ perpetual_mode:
   # Only applies when priority monitor is disabled otherwise is 1
   max_servers: 2
   # Minimum players to consider seeding
-  min_players: 10
+  min_players: 8
   # Do not seed servers with these terms in the name (case-insensitive)
   ignore_name_contains: [
     cn, violet, # chinese

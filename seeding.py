@@ -152,8 +152,27 @@ print(f'Priority monitor  : {c.green if priority_monitor else c.darkgrey}{priori
 if priority_monitor:
     print(
         f'Priority end time : {c.lightblue}{stop_priority_datetime}{c.reset} or {c.darkgrey}{plan_prioritytime_str} from start{c.reset}')
-print(f'Servers listed    : {c.lightblue}{len(servers)}{c.reset}')
+print(f'Priority servers  : {c.lightblue}{len(servers)}{c.reset}')
 print()
+
+
+if not hll_game.is_steam_fully_running():
+    print(f'{c.lightgrey}Launching steam...{c.reset}')
+
+    if not debug_no_game:
+        hll_game.steam_launch_and_wait()
+else:
+    print(f'{c.lightgrey}Steam is running{c.reset}')
+
+if not hll_game.is_running():
+    print(f'{c.lightgrey}Launching game...{c.reset}')
+
+    if not debug_no_game:
+        hll_game.launch_and_wait()
+else:
+    print(f'{c.lightgrey}Game already running{c.reset}')
+print()
+
 
 do_steam_search = perpetual_enabled
 for server in servers:
@@ -364,15 +383,6 @@ if not priority_monitor:
             print(f'  {c.darkgrey}Skip reason(s){c.reset} : {c.darkgrey}{check["reasons"]}{c.reset}')
     print()
 
-if not hll_game.is_running():
-    print(f'{c.lightgrey}Launching game...{c.reset}')
-
-    if not debug_no_game:
-        hll_game.launch_and_wait()
-else:
-    print(f'{c.lightgrey}Game already running{c.reset}')
-print()
-
 printed_progress = False
 
 window_safe_focus("hll_seeding_script")
@@ -435,7 +445,7 @@ try:
             # typically ~30 seconds for ~250 servers assuming early disqualify
             sw.start("perpetual")
             perpetual_servers = perpetual_search(max_servers=max)
-            debug(f'{nl()}{c.darkgrey}{sw.seconds("perpetual")}s perpetual search - {perpetual_servers}{c.reset}')
+            debug(f'{c.darkgrey}{sw.seconds("perpetual")}s perpetual search - {perpetual_servers}{c.reset}')
 
             if perpetual_servers is not None and len(perpetual_servers) > 0:
                 for server in perpetual_servers:
@@ -449,7 +459,7 @@ try:
         i = 0
         for server in priority_servers:
             if priority_monitor_ranked and current_rank != -1 and i >= current_rank:
-                # debug(f'{nl()}priority_server_check ranked break {i} < {current_rank}')
+                # debug(f'priority_server_check ranked break {i} < {current_rank}')
                 break
             server_addr = server["server_addr"]
             config = server["config"]
@@ -470,7 +480,7 @@ try:
                                             ignore_previous_joined=True)
 
                 # if priority_monitor_ranked and current_rank != -1:
-                #     debug(f'{nl()}rank checked {server_addr} rank #{i} / {current_rank}')
+                #     debug(f'rank checked {server_addr} rank #{i} / {current_rank}')
 
                 global current_server
                 if check["queue"] and server_addr not in server_queue and server_addr != current_server:
@@ -548,11 +558,18 @@ try:
         thresh_diff = players_max_count - threshold
         dead_fraction = min(1, diff / max(1, thresh_diff))
 
+        gmtime = time.gmtime(sw.seconds("seeding"))
+        elapsed_parts = [(gmtime.tm_hour, "%Hh"), (gmtime.tm_min, "%Mm"), (gmtime.tm_sec, "%Ss")]
+        elapsed_parts2 = []
+        for part in elapsed_parts:
+            if part[0] > 0:
+                elapsed_parts2.append(time.strftime(part[1], gmtime))
+
         progress_bar = f'[{c.green}{arrow}{c.reset}{padding}]'
         status_str = (
             f'Status: {c.darkgrey}{player_minimum}{c.reset}/{c.green}{current}{c.reset}/{c.green}{player_threshold}{c.reset}'
             f'  {c.green}{int(fraction * 100)}{c.reset}%  ')
-        elapsed_str = f'Elapsed: {c.green}{time.strftime("%Hh %Mm %Ss", time.gmtime(sw.seconds("seeding")))}{c.reset}  '
+        elapsed_str = f'Elapsed: {c.green}{" ".join(elapsed_parts2)}{c.reset}  '
         dying_str = "" if not check_dying else f'Dying: {c.orange}{diff}{c.reset}/{c.orange}{thresh_diff}  {int(dead_fraction * 100)}{c.reset}%{c.reset}  '
         timeout_str = "" if timeouts == 0 else f'Timeout: {c.red}{timeouts}{c.reset}/{c.red}{query_timeout_limit}{c.reset}  '
 
@@ -650,10 +667,10 @@ try:
                 current_server = None
             continue
         if current_server is None and len(server_queue) == 0:
-            debug(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) == 0{c.reset}')
+            debug(f'{c.darkgrey}current_server is None and len(server_queue) == 0{c.reset}')
             continue
         elif current_server is None and len(server_queue) >= 1:
-            debug(f'{nl()}{c.darkgrey}current_server is None and len(server_queue) >= 1{c.reset}')
+            debug(f'{c.darkgrey}current_server is None and len(server_queue) >= 1{c.reset}')
             next_server = True
             continue
 

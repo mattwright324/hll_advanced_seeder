@@ -1,6 +1,10 @@
 import subprocess, time
 from steam import game_servers as gs
 
+# steam processes
+steam_exe = 'steam.exe'
+steam_web_exe = 'steamwebhelper.exe'
+
 # The EAC splash popup before the game is ready
 launch_exe = 'HLL_Launch.exe'
 # The game itself
@@ -19,6 +23,32 @@ def __process_exists(process_name):
 
 def __process_kill(process_name):
     subprocess.run(f'taskkill /IM "{process_name}" /F', stdout=subprocess.DEVNULL)
+
+
+def is_steam_fully_running():
+    return __process_exists(steam_exe) and __process_exists(steam_web_exe)
+
+
+def launch_steam():
+    if not is_steam_fully_running():
+        subprocess.run(f"cmd /c start steam://nav/games/details/{hll_steam_id}")
+
+
+def wait_until_steam_running(wait=25):
+    # start = time.time()
+    while True:
+        if not is_steam_fully_running():
+            time.sleep(1)
+        else:
+            break
+    # print(f"Running - {time.time() - start}s")
+    time.sleep(wait)
+    # print(f"Running (+{wait}s) - {time.time() - start}s")
+
+
+def steam_launch_and_wait(wait=25):
+    launch_steam()
+    wait_until_steam_running(wait)
 
 
 def did_game_crash():
@@ -71,7 +101,7 @@ def join_server_addr(server_addr):
 
 
 # Checks for game running and EAC splash popup to go away and 15 sec extra
-def wait_until_running():
+def wait_until_running(wait=25):
     # start = time.time()
     while True:
         if __process_exists(launch_exe) or not is_fully_running():
@@ -79,12 +109,12 @@ def wait_until_running():
         else:
             break
     # print(f"Running - {time.time() - start}s")
-    time.sleep(15)
-    # print(f"Running (+15s) - {time.time() - start}s")
+    time.sleep(wait)
+    # print(f"Running (+{wait}s) - {time.time() - start}s")
 
 
 # Checks for multiple processes to quit and 15 sec extra
-def wait_until_dead():
+def wait_until_dead(wait=25):
     # start = time.time()
     while True:
         if (is_running() or __process_exists(bugreport_exe)
@@ -93,8 +123,8 @@ def wait_until_dead():
         else:
             break
     # print(f"Dead - {time.time() - start}s")
-    time.sleep(15)
-    # print(f"Dead (+15s) - {time.time() - start}s")
+    time.sleep(wait)
+    # print(f"Running (+{wait}s) - {time.time() - start}s")
 
 
 def is_player_present(server_addr, player_name, timeout=3):
@@ -110,13 +140,13 @@ def is_player_present(server_addr, player_name, timeout=3):
         return None
 
 
-def launch_and_wait():
+def launch_and_wait(wait=15):
     launch()
-    wait_until_running()
+    wait_until_running(wait)
 
 
-def relaunch_and_wait():
+def relaunch_and_wait(wait=15):
     kill()
     kill_crash_window()
-    wait_until_dead()
-    launch_and_wait()
+    wait_until_dead(wait)
+    launch_and_wait(wait)
