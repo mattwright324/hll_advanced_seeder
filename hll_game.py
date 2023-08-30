@@ -140,12 +140,12 @@ def is_player_present(server_addr, player_name, timeout=3):
         return None
 
 
-def launch_and_wait(wait=15):
+def launch_and_wait(wait=25):
     launch()
     wait_until_running(wait)
 
 
-def relaunch_and_wait(wait=15):
+def relaunch_and_wait(wait=25):
     kill()
     kill_crash_window()
     wait_until_dead(wait)
