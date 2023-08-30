@@ -64,6 +64,48 @@ to search for ones that match your priority server criteria or for perpetual mod
 
 https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
 
+
+## Q & A
+
+### Why would I want to help other community servers? (perpetual mode)
+
+Seeding servers can be exhausting and painful! An extra digit is always helpful.
+
+When all your priority servers are seeded or waiting to start seeding, use the idle time otherwise to help out the rest
+of the community.
+
+The more populated servers there are, the better it is for the longevity of the game.
+
+### Is there any risk running this?
+
+It should be very, very, low.
+
+At worst, a server may ban you for language/country rules.
+For example, this happened to me in perpetual mode for random french servers requiring players to be "FR Only".
+I have since added FR to the perpetual ignore terms.
+
+<details>
+<summary>The script does not interact with or give an advantage to any form of gameplay.</summary>
+
+The script can do the following:
+
+- Use the `steam://` protocol to start steam, launch the game, and connect to servers
+- Use windows commands to check if Steam, HLL, and related processes are running
+- Use windows commands to kill the game or the crash window
+- Uses Valve A2S to query realtime server info and players
+- Uses Valve MSQP to query for all current servers
+- Saves screenshots locally when the game crashes or to capture server disconnect messages (idle kick, lost connection, ban, etc.)
+
+The script **does not**:
+
+- Interact with the game with mouse clicks, typing, or any kind of input
+- Provide any kind of gameplay advantage in any way
+
+When the script joins a server, it is still up to you to manually join a side, build garrys, etc. if you choose to.
+
+</details>
+
+
 ## Potential usages
 
 ### I want to... seed and monitor my priority servers when they start seeding and also help seed other community servers
@@ -103,42 +145,3 @@ instances.
 Note: `min_players` value of 1 is nearly the same as 0 since the player count will be including yourself.
 Requires 1 person in order to join at first but if they leave, the seeding account will not move on.
 
-## Potential Q & A
-
-### Why would I want to help other community servers? (perpetual mode)
-
-Seeding servers can be exhausting and painful! An extra digit is always helpful.
-
-When all your priority servers are seeded or waiting to start seeding, use the idle time otherwise to help out the rest
-of the community.
-
-The more populated servers there are, the better it is for the longevity of the game.
-
-### Is there any risk running this?
-
-It should be very, very, low.
-
-At worst, a server may ban you for language/country rules.
-For example, this happened to me in perpetual mode for random french servers requiring players to be "FR Only".
-I have since added FR to the perpetual ignore terms.
-
-<details>
-<summary>The script does not interact with or give an advantage to any form of gameplay.</summary>
-
-The script can do the following:
-
-- Use the `steam://` protocol to start steam, launch the game, and connect to servers
-- Use windows commands to check if Steam, HLL, and related processes are running
-- Use windows commands to kill the game or the crash window
-- Uses Valve A2S to query realtime server info and players
-- Uses Valve MSQP to query for all current servers
-- Saves screenshots locally when the game crashes or to capture server disconnect messages (idle kick, lost connection, ban, etc.)
-
-The script **does not**:
-
-- Interact with the game with mouse clicks, typing, or any kind of input
-- Provide any kind of gameplay advantage in any way
-
-When the script joins a server, it is still up to you to manually join a side, build garrys, etc. if you choose to.
-
-</details>
