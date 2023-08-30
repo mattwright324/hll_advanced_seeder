@@ -86,6 +86,7 @@ I have since added FR to the perpetual ignore terms.
 
 <details>
 <summary>The script does not interact with or give an advantage to any form of gameplay.</summary>
+<br>
 
 > The script can do the following:
 > 
