@@ -10,7 +10,7 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 
 - Schedule a specific time to wake your computer and start the seed script `setup.bat`
 - Seed multiple servers in a specific order
-- Define priority servers by IP or search by server name
+- Define priority servers by server name keywords or by specific IP
 - Monitors and switches servers once each hits 50 pop
 - Perpetual seeding mode
     - Searches the steam server list for additional seeding servers once it's done with your priority servers
