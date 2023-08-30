@@ -164,15 +164,24 @@ for server in servers:
 steam_servers = {}
 if do_steam_search:
     print(f'{c.yellow}Searching steam server list{c.reset}')
+    timeouts = []
     for server_addr in gs.query_master(r'\appid\686810', max_servers=1000):
         value = f'{c.lightgrey}{len(steam_servers)} servers{c.reset}'
         print("\r{0}".format(value), end='')
         try:
-            info = gs.a2s_info(server_addr, timeout=2)
-
+            info = gs.a2s_info(server_addr, timeout=1)
             steam_servers[server_addr] = info
-        except Exception as err:
-            debug(f"\n{c.red}Unexpected A {err=}, {type(err)=}{c.reset}")
+        except:
+            timeouts.append(server_addr)
+    if len(timeouts) < 20:
+        debug(f'retrying {len(timeouts)} servers with longer timeout')
+        # if there weren't too many failures, retry the timeouts with a longer wait
+        for server_addr in timeouts:
+            try:
+                info = gs.a2s_info(server_addr, timeout=10)
+                steam_servers[server_addr] = info
+            except Exception as err:
+                pass
     value = f'{c.lightgrey}{len(steam_servers)} servers{c.reset}'
     print("\r{0}".format(value), end='\n')
     print()
