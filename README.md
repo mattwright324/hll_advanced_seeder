@@ -68,27 +68,29 @@ https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
 
 1. I want to seed my priority servers then help out other seeding community servers. However, I also want it to go back to a priority server if it starts seeding or crashes later on.
 
-Current seeding yaml settings are set to do this. `priority_monitor` and `perpetual_mode` are on.
+Current seeding yaml settings are set to do this. `priority.monitor_enabled` and `perpetual_mode.enabled` are on.
 
 It will go back and forth between priority and random perpetual servers as needed.
 
 2. I only want to seed my priority servers and nothing else.
 
-Disable `perpetual_mode` in the seeding yaml.
+Disable `perpetual_mode.enabled` in the seeding yaml.
 
 3. I want to run multiple seeding accounts with this script.
 
 You'll need separate PCs and script instances for each one of course, however for each script its:
 
-Recommended to stagger the `priority_min_players` or individual server `min_players`
+Recommended to stagger the `priority.min_players` or individual server `min_players`
 and potentially change `seeded_player_variability` depending on number of accounts.
 These settings are to mitigate issues where multiple accounts could get stuck on the same server that is dead 
 or so that they all don't leave a just-seeded server at the exact same time.
 
 For example:
 
-- Seed account 1  `priority_min_players: 0`
-- Seed account 2  `priority_min_players: 2`
-- Seed account 3  `priority_min_players: 3`
-- Seed account 4  `priority_min_players: 4`
-- Seed account 5  `priority_min_players: 5`
+- Seed account 1 script `priority.min_players: 0`
+- Seed account 2 script `priority.min_players: 0`
+- Seed account 3 script `priority.min_players: 2`
+- Seed account 4 script `priority.min_players: 3`
+- Seed account 5 script `priority.min_players: 4`
+
+Note: since the player count doesn't exclude yourself, a minimum of 1 nearly the same as 0.
