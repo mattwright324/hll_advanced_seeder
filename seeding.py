@@ -169,7 +169,7 @@ if do_steam_search:
         value = f'{c.lightgrey}{len(steam_servers)} servers{c.reset}'
         print("\r{0}".format(value), end='')
         try:
-            info = gs.a2s_info(server_addr, timeout=1)
+            info = gs.a2s_info(server_addr, timeout=2)
             steam_servers[server_addr] = info
         except:
             timeouts.append(server_addr)
