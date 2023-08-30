@@ -54,10 +54,12 @@ def screenshot(detail, server_info):
         window_safe_focus("Unreal Engine 4 Crash Reporter")
 
     detail_server = "" if server_info is None else f" - {latest_info['name'][0:30]}"
-
     timestamp = dt.now().strftime('%Y%m%d-%H%M%S')
+    screenshot_file = f"{timestamp} - {detail}{detail_server}.png"
+    debug(f"saving screenshot [{screenshot_file}]")
+
     screenshot = pyautogui.screenshot()
-    filename = sanitize(f"{timestamp} - {detail}{detail_server}.png")
+    filename = sanitize(screenshot_file)
     screenshot.save(f"screenshots/{filename}")
 
     # bring seed script back to top
@@ -620,7 +622,9 @@ try:
                             debug(f"Player present {sw.seconds('idle_check')}")
                             break
                 if not hll_game.is_player_present(current_server, player_name) and debug_screenshots:
+                    print(f'{nl()}{c.orange}Priority server below configured {player_minimum} players{c.reset}')
                     screenshot(f"New server failed join", steam_servers[current_server])
+                    current_server = None
 
         if dt.today() >= stop_datetime:
             print()
