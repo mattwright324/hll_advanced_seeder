@@ -39,11 +39,11 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 3. Open `seeding.yaml` to configure script settings and servers to seed
     - Most default values should be fine as is though can be tweaked however you want
     - Most relevant properties you'll probably want to change:
-       - `seeding_method` and properties under it
-       - `priority_servers`
+       - `seeding.method`
+       - `priority.servers`
+       - `priority.monitor_enabled`
        - `check_idle_kick` and `player_name`
-       - `priority_monitor`
-       - `perpetual_mode`
+       - `perpetual_mode.enabled`
 4. Run `setup.bat` to create a scheduled task that will wake up the computer and run the seeding script
 
 To verify a task is scheduled use `verify.bat`.
