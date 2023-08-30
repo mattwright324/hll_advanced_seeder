@@ -87,21 +87,21 @@ I have since added FR to the perpetual ignore terms.
 <details>
 <summary>The script does not interact with or give an advantage to any form of gameplay.</summary>
 
-The script can do the following:
-
-- Use the `steam://` protocol to start steam, launch the game, and connect to servers
-- Use windows commands to check if Steam, HLL, and related processes are running
-- Use windows commands to kill the game or the crash window
-- Uses Valve A2S to query realtime server info and players
-- Uses Valve MSQP to query for all current servers
-- Saves screenshots locally when the game crashes or to capture server disconnect messages (idle kick, lost connection, ban, etc.)
-
-The script **does not**:
-
-- Interact with the game with mouse clicks, typing, or any kind of input
-- Provide any kind of gameplay advantage in any way
-
-When the script joins a server, it is still up to you to manually join a side, build garrys, etc. if you choose to.
+> The script can do the following:
+> 
+> - Use the `steam://` protocol to start steam, launch the game, and connect to servers
+> - Use windows commands to check if Steam, HLL, and related processes are running
+> - Use windows commands to kill the game or the crash window
+> - Uses Valve A2S to query realtime server info and players
+> - Uses Valve MSQP to query for all current servers
+> - Saves screenshots locally when the game crashes or to capture server disconnect messages (idle kick, lost connection, ban, etc.)
+> 
+> The script **does not**:
+> 
+> - Interact with the game with mouse clicks, typing, or any kind of input
+> - Provide any kind of gameplay advantage in any way
+> 
+> When the script joins a server, it is still up to you to manually join a side, build garrys, etc. if you choose to.
 
 </details>
 
