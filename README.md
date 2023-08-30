@@ -66,31 +66,45 @@ https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
 
 ## Potential usages
 
-1. I want to seed my priority servers then help out other seeding community servers. However, I also want it to go back to a priority server if it starts seeding or crashes later on.
+### I want to... seed and monitor my priority servers when they start seeding and also help seed other community servers 
 
-Current seeding yaml settings are set to do this. `priority.monitor_enabled` and `perpetual_mode.enabled` are on.
+The `seeding.yaml` by default is configured for this behavior. 
 
-It will go back and forth between priority and random perpetual servers as needed.
+It will go back and forth between priority, higher priority, and random community servers as necessary.
 
-2. I only want to seed my priority servers and nothing else.
+With `priority.monitor_enabled` the script will constantly check your priority servers and 
+jump back to them if the player count drops or they start seeding whenever that happens.
 
-Disable `perpetual_mode.enabled` in the seeding yaml.
+### I want to... only seed and monitor my priority servers and nothing else
 
-3. I want to run multiple seeding accounts with this script.
+Disable `perpetual_mode.enabled` and the script will only care about your configured priority servers.
 
-You'll need separate PCs and script instances for each one of course, however for each script its:
+### I want to... run the script 24/7
 
-Recommended to stagger the `priority.min_players` or individual server `min_players`
-and potentially change `seeded_player_variability` depending on number of accounts.
-These settings are to mitigate issues where multiple accounts could get stuck on the same server that is dead 
-or so that they all don't leave a just-seeded server at the exact same time.
+Using the task schedule start time, configure the `seeding.endtime` to a time shortly before that.
 
-For example:
+For example: 
 
-- Seed account 1 script `priority.min_players: 0`
-- Seed account 2 script `priority.min_players: 0`
-- Seed account 3 script `priority.min_players: 2`
-- Seed account 4 script `priority.min_players: 3`
-- Seed account 5 script `priority.min_players: 4`
+- `setup.bat` scheduled start of `6:00:00` or 6 AM. 
+- `seeding.yaml` scheduled end time of `5:45 am`
+- Assuming priority monitor and/or perpetual mode are enabled, the script will be seeding servers almost endlessly
 
-Note: since the player count doesn't exclude yourself, a minimum of 1 nearly the same as 0.
+### I want to... run multiple scripts and accounts
+
+Of course you would need multiple devices and script instances.
+
+Default settings should work for this though you may need to tweak them depending on the number of accounts.
+
+There are also mitigations (`priority.min_players`, `seeded_player_variability`, and `perpetual_mode` random method) to prevent every account from jumping
+to the next server all at the same time. These options will need to be tweaked/staggered for each instance for many instances.
+
+Note: `min_players` value of 1 is nearly the same as 0 since the player count will be including yourself.
+Requires 1 person in order to join at first but if they leave, the seeding account will not move on.
+
+### Why would I want to help other community servers? (perpetual mode)
+
+Seeding servers can be exhausting and painful! An extra digit is always helpful.
+
+When all your priority servers are seeded or waiting to start seeding, use the idle time otherwise to help out the rest of the community.
+
+The more populated servers there are, the better it is for the longevity of the game.
