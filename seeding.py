@@ -649,9 +649,9 @@ try:
                             break
                 if not hll_game.is_player_present(current_server, player_name):
                     print(f'{nl()}{c.orange}Failed to join queued server{c.reset}')
-                    current_server = None
                     if debug_screenshots:
                         screenshot(f"New server failed join", steam_servers[current_server])
+                    current_server = None
 
         if dt.today() >= stop_datetime:
             print()
