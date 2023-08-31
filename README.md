@@ -34,8 +34,9 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 1. Install the latest Python 3.x
     - https://www.python.org/downloads/
     - On the installer be sure to check `Add Python to PATH`
-2. Open command prompt and install required packages
-    - `pip install -r requirements.txt`
+2. Install required python packages
+    - Use `requirements_pip_install.bat` as the quickest/easiest option
+    - Alternatively, use command prompt, cd to the project, and run `pip install -r requirements.txt` manually
 3. Open `seeding.yaml` to configure script settings and servers to seed
     - Most default values should be fine as is though can be tweaked however you want
     - Most relevant properties you'll probably want to change:
