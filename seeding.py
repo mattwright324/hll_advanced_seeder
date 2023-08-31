@@ -647,11 +647,11 @@ try:
                         elif check is True:
                             debug(f"Player present {sw.seconds('idle_check')}")
                             break
-                if not hll_game.is_player_present(current_server, player_name):
-                    print(f'{nl()}{c.orange}Failed to join queued server{c.reset}')
-                    if debug_screenshots:
-                        screenshot(f"New server failed join", steam_servers[current_server])
-                    current_server = None
+                    if not hll_game.is_player_present(current_server, player_name):
+                        print(f'{nl()}{c.orange}Failed to join queued server{c.reset}')
+                        if debug_screenshots:
+                            screenshot(f"New server failed join", steam_servers[current_server])
+                        current_server = None
 
         if dt.today() >= stop_datetime:
             print()
