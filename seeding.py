@@ -42,7 +42,7 @@ def window_safe_focus(process_title, minimize=True):
     time.sleep(2)
 
 
-def screenshot(detail, server_info):
+def screenshot(detail, server_addr):
     debug(f'Screenshot {detail}')
     if not os.path.exists("screenshots"):
         os.makedirs("screenshots")
@@ -53,7 +53,11 @@ def screenshot(detail, server_info):
     elif hll_game.did_game_crash():
         window_safe_focus("Unreal Engine 4 Crash Reporter")
 
-    detail_server = "" if server_info is None else f" - {latest_info['name'][0:30]}"
+    server_info = None
+    if server_addr is not None:
+        server_info = steam_servers[server_addr]
+
+    detail_server = "" if server_info is None else f" - {server_info['name'][0:30]}"
     timestamp = dt.now().strftime('%Y%m%d-%H%M%S')
     screenshot_file = f"{timestamp} - {detail}{detail_server}.png"
     debug(f"saving screenshot [{screenshot_file}]")
@@ -596,7 +600,7 @@ try:
         if not debug_no_game:
             if hll_game.did_game_crash():
                 if debug_screenshots:
-                    screenshot(f"Game crashed", steam_servers[current_server])
+                    screenshot(f"Game crashed", current_server)
 
                 print(f'{nl()}{c.red}Game crashed{c.reset}')
                 print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -609,7 +613,7 @@ try:
 
             elif hll_game.is_fully_dead():
                 if debug_screenshots:
-                    screenshot(f"Game closed", steam_servers[current_server])
+                    screenshot(f"Game closed", current_server)
 
                 print(f'{nl()}{c.red}Game closed{c.reset}')
                 print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -677,7 +681,7 @@ try:
                     if not hll_game.is_player_present(current_server, player_name):
                         print(f'{nl()}{c.orange}Failed to join queued server{c.reset}')
                         if debug_screenshots:
-                            screenshot(f"New server failed join", steam_servers[current_server])
+                            screenshot(f"New server failed join", current_server)
                         current_server = None
 
         if dt.today() >= stop_datetime:
@@ -726,7 +730,7 @@ try:
             if not debug_no_game:
                 if hll_game.did_game_crash():
                     if debug_screenshots:
-                        screenshot(f"Game crashed", steam_servers[current_server])
+                        screenshot(f"Game crashed", current_server)
 
                     print(f'{nl()}{c.red}Game crashed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -739,7 +743,7 @@ try:
 
                 elif hll_game.is_fully_dead():
                     if debug_screenshots:
-                        screenshot(f"Game closed", steam_servers[current_server])
+                        screenshot(f"Game closed", current_server)
 
                     print(f'{nl()}{c.red}Game closed{c.reset}')
                     print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
@@ -762,7 +766,7 @@ try:
 
                         if not name_present:
                             if debug_screenshots:
-                                screenshot(f"Not in player list", steam_servers[current_server])
+                                screenshot(f"Not in player list", current_server)
                             print(f'{nl()}{c.red}{player_name} is no longer in the player list. Idle kick?{c.reset}')
                             print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
                             hll_game.relaunch_and_wait()
