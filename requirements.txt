@@ -1,3 +1,11 @@
-python-a2s
+# parse seeding.yaml
 pyyaml
+
+# valve query server info and get server list
 steam[client]
+
+# focus windows and screenshot to debug game crashes and kick/disconnect messages before closing/relaunching
+pyautogui
+pywinauto
+pywin32
+sanitize_filename

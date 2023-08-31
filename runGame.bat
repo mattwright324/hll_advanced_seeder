@@ -1,3 +1,3 @@
 @echo off
 
-start cmd.exe /c "python %~dp0\seeding.py"
+start "hll_seeding_script" cmd.exe /c "python %~dp0\seeding.py"
