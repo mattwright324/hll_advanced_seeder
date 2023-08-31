@@ -593,6 +593,33 @@ try:
 
         server_check()
 
+        if not debug_no_game:
+            if hll_game.did_game_crash():
+                if debug_screenshots:
+                    screenshot(f"Game crashed", steam_servers[current_server])
+
+                print(f'{nl()}{c.red}Game crashed{c.reset}')
+                print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
+                hll_game.relaunch_and_wait()
+
+                if current_server is not None:
+                    print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
+                    hll_game.join_server_addr(current_server)
+                    time.sleep(15)
+
+            elif hll_game.is_fully_dead():
+                if debug_screenshots:
+                    screenshot(f"Game closed", steam_servers[current_server])
+
+                print(f'{nl()}{c.red}Game closed{c.reset}')
+                print(f'{nl()}{c.darkgrey}Relaunching game...{c.reset}')
+                hll_game.relaunch_and_wait()
+
+                if current_server is not None:
+                    print(f'{nl()}Reconnecting {c.lightblue}{str(current_server).ljust(27)}{c.reset}')
+                    hll_game.join_server_addr(current_server)
+                    time.sleep(15)
+
         if len(server_queue) >= 1 and next_server:
             current_server = server_queue.pop(0)
             info = steam_servers[current_server]

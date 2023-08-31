@@ -15,9 +15,9 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 - Perpetual seeding mode
     - Searches the steam server list for additional seeding servers once it's done with your priority servers
     - Checks for servers matching criteria:
-        - 10-50 pop
+        - 8-50 pop
         - No password
-        - Name does not contain keywords (CN, HLL Official, Event, Training)
+        - Name does not contain keywords (HLL Official, Event, Training, CN, FR)
         - Max players is 100 (a real server, not bob the builder)
     - Help out the rest of the HLL community!
 - Detects when a server is dying rather than seeding (server pop drops by half) and moves on
@@ -65,6 +65,9 @@ to search for ones that match your priority server criteria or for perpetual mod
 
 https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
 
+Check out the account running this almost 24/7! 
+
+[SodiumEnglish](https://steamcommunity.com/profiles/76561199503883512/) with more than 1500 hours of just seeding
 
 ## Q & A
 
