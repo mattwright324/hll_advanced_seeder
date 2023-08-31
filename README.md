@@ -65,6 +65,9 @@ to search for ones that match your priority server criteria or for perpetual mod
 
 https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
 
+Check out the account running this almost 24/7! 
+
+[SodiumEnglish](https://steamcommunity.com/profiles/76561199503883512/) with more than 1500 hours of just seeding
 
 ## Q & A
 
