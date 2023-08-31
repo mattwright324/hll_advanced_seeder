@@ -33,7 +33,7 @@ Makes use of and credit to [KtodaZ](https://github.com/KtodaZ/) for batch script
 
 1. Install the latest Python 3.x
     - https://www.python.org/downloads/
-    - Check the box to add Python to PATH
+    - On the installer be sure to check `Add Python to PATH`
 2. Open command prompt and install required packages
     - `pip install -r requirements.txt`
 3. Open `seeding.yaml` to configure script settings and servers to seed
