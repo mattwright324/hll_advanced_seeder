@@ -150,3 +150,14 @@ instances.
 Note: `min_players` value of 1 is nearly the same as 0 since the player count will be including yourself.
 Requires 1 person in order to join at first but if they leave, the seeding account will not move on.
 
+## Troubleshooting
+
+### The game starts, but the script never joines a game, it's just stuck on Launching Game
+Solution: A process is not running that is required for the application to determine if the game server is ready to be joined
+- One of these could be your Steam Overlay. If it is disabled in your setttings, you can remove it from the list of processes in `seeding.yaml`. Example:
+```
+misc_game_processes:
+  - "GameOverlayUI.exe" # Remove/comment this one if your Steam Overlay is disabled
+  - "HLL_BugReportUploader.exe"
+  - "CrashReportClient.exe"
+```

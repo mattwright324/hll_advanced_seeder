@@ -67,7 +67,7 @@ server_query_timeout: 15
 query_timeout_limit: 6
 # Check if name is in the player list
 check_idle_kick: false
-player_name: SodiumEnglish
+player_name: SodiumEnglish # replace this with your in-game name - use quotes if contains special characters
 
 
 # When out of servers, search the steam server list for more seeding servers
@@ -90,6 +90,13 @@ perpetual_mode:
     fr only, french # will be banned unless you are actually french (they check steam profile country)
   ]
 
+# list of procs to checkwhen determining if the game is running - see 'is_fully_running()' in 'seeding.py'
+# + add more if you have other procs that need to be running for the game to be fully running
+# - remove any that are not needed or are causing false negatives for 'is_fully_running()'
+misc_game_processes:
+  - "GameOverlayUI.exe" # Remove/comment this one if your Steam Overlay is disabled
+  - "HLL_BugReportUploader.exe"
+  - "CrashReportClient.exe"
 
 # options that help with script development/debugging
 debug:

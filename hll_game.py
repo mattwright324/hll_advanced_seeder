@@ -1,4 +1,5 @@
 import subprocess, time
+import yaml
 from steam import game_servers as gs
 
 # steam processes
@@ -10,6 +11,13 @@ launch_exe = 'HLL_Launch.exe'
 # The game itself
 hll_exe = 'HLL-Win64-Shipping.exe'
 # Last couple processes running after game exit
+try:
+    with open('seeding.yaml', 'r') as seeding_cfg_file:
+        seeding_cfg = yaml.safe_load(seeding_cfg_file)
+        misc_processes = seeding_cfg['misc_game_processes']
+except Exception as err:
+    print(f"Error loading seeding.yaml: {err}")
+
 bugreport_exe = 'HLL_BugReportUploader.exe'
 overlay_exe = 'GameOverlayUI.exe'
 crash_window_exe = 'CrashReportClient.exe'
@@ -58,16 +66,17 @@ def did_game_crash():
 def is_running():
     return __process_exists(hll_exe)
 
-
 def is_fully_running():
-    return (is_running() and __process_exists(bugreport_exe)
-            and __process_exists(overlay_exe) and __process_exists(crash_window_exe))
-
+    for process_name in misc_processes:
+        if not __process_exists(process_name):
+            return False
+    return is_running()
 
 def is_fully_dead():
-    return not (is_running() or __process_exists(bugreport_exe)
-                or __process_exists(overlay_exe) or __process_exists(crash_window_exe))
-
+    for process_name in misc_processes:
+        if __process_exists(process_name):
+            return False
+    return not is_running()
 
 def kill():
     if is_running():
@@ -80,7 +89,7 @@ def kill_crash_window():
 
 
 def kill_all():
-    for process_name in [hll_exe, crash_window_exe, bugreport_exe, overlay_exe]:
+    for process_name in misc_processes.append(hll_exe):
         if __process_exists(process_name):
             __process_kill(process_name)
 
