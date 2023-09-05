@@ -11,9 +11,12 @@ launch_exe = 'HLL_Launch.exe'
 # The game itself
 hll_exe = 'HLL-Win64-Shipping.exe'
 # Last couple processes running after game exit
-with open('seeding.yaml', 'r') as seeding_cfg_file:
-    seeding_cfg = yaml.safe_load(seeding_cfg_file)
-    misc_processes = seeding_cfg['processes']['game_processes']
+try:
+    with open('seeding.yaml', 'r') as seeding_cfg_file:
+        seeding_cfg = yaml.safe_load(seeding_cfg_file)
+        misc_processes = seeding_cfg['misc_game_processes']
+except Exception as err:
+    print(f"Error loading seeding.yaml: {err}")
 
 bugreport_exe = 'HLL_BugReportUploader.exe'
 overlay_exe = 'GameOverlayUI.exe'
@@ -86,7 +89,7 @@ def kill_crash_window():
 
 
 def kill_all():
-    for process_name in [hll_exe, crash_window_exe, bugreport_exe, overlay_exe]:
+    for process_name in misc_processes.append(hll_exe):
         if __process_exists(process_name):
             __process_kill(process_name)
 

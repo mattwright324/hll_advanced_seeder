@@ -156,12 +156,8 @@ Requires 1 person in order to join at first but if they leave, the seeding accou
 Solution: A process is not running that is required for the application to determine if the game server is ready to be joined
 - One of these could be your Steam Overlay. If it is disabled in your setttings, you can remove it from the list of processes in `seeding.yaml`. Example:
 ```
-processes:
-  # list of procs to checkwhen determining if the game is running - see 'is_fully_running()' in 'seeding.py'
-  # + add more if you have other procs that need to be running for the game to be fully running
-  # - remove any that are not needed or are causing false negatives for 'is_fully_running()'
-  game_processes:
-    - "GameOverlayUI.exe" # Remove this one if your Steam Overlay is disabled
-    - "HLL_BugReportUploader.exe"
-    - "CrashReportClient.exe"
+misc_game_processes:
+  - "GameOverlayUI.exe" # Remove/comment this one if your Steam Overlay is disabled
+  - "HLL_BugReportUploader.exe"
+  - "CrashReportClient.exe"
 ```
