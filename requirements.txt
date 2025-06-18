@@ -9,3 +9,10 @@ pyautogui
 pywinauto
 pywin32
 sanitize_filename
+
+psutil
+pygetwindow
+python-imagesearch
+clipboard
+
+steamworkspy
